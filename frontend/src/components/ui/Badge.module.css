@@ -1,0 +1,13 @@
+.badge {
+  display: inline-block;
+  padding: 0.45em 0.9em;
+  border-radius: var(--radius-md);
+  background-image: var(--tone-gradient);
+  color: var(--color-on-gradient);
+  font-size: var(--fs-2xs);
+  font-weight: var(--fw-bold);
+  line-height: 1;
+  text-transform: uppercase;
+  letter-spacing: 0.02em;
+  white-space: nowrap;
+}

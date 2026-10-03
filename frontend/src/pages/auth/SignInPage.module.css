@@ -1,0 +1,129 @@
+.page {
+  display: grid;
+  grid-template-columns: minmax(0, 5fr) minmax(0, 7fr);
+  min-height: 100vh;
+  background: var(--color-surface);
+}
+
+.formSide {
+  display: flex;
+  flex-direction: column;
+  padding: var(--space-5) var(--space-6);
+}
+
+.brand {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  font-size: var(--fs-sm);
+  font-weight: var(--fw-bold);
+  color: var(--color-heading);
+}
+
+.logo {
+  width: 2rem;
+  height: 2rem;
+}
+
+.formWrap {
+  width: 100%;
+  max-width: 24rem;
+  margin: auto;
+  padding: var(--space-6) 0;
+}
+
+.title {
+  font-size: var(--fs-2xl);
+}
+
+.lead {
+  margin-bottom: var(--space-5);
+  font-size: var(--fs-sm);
+}
+
+.form {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+}
+
+.submit {
+  margin-top: var(--space-2);
+}
+
+.help {
+  margin-top: var(--space-5);
+  font-size: var(--fs-xs);
+  text-align: center;
+  color: var(--color-muted);
+}
+
+.artSide {
+  position: relative;
+  overflow: hidden;
+}
+
+/* Khối gradient nghiêng lệch như soft UI */
+.art {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  right: -10rem;
+  left: 6rem;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-3);
+  padding: 0 14rem 0 4rem;
+  border-bottom-left-radius: var(--radius-2xl);
+  background-image: var(--gradient-primary);
+  color: var(--color-on-gradient);
+  text-align: center;
+  transform: skewX(-10deg);
+  overflow: hidden;
+}
+
+.art::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background:
+    radial-gradient(circle at 80% 15%, rgba(244, 177, 15, 0.4), transparent 35%),
+    radial-gradient(rgba(255, 255, 255, 0.18) 1px, transparent 1px) 0 0 / 18px 18px;
+}
+
+.art > * {
+  position: relative;
+  transform: skewX(10deg);
+}
+
+.artLogo {
+  width: 6rem;
+  height: 6rem;
+  filter: drop-shadow(0 8px 16px rgba(0, 0, 0, 0.25));
+}
+
+.artTitle {
+  color: inherit;
+  font-size: var(--fs-xl);
+}
+
+.artText {
+  max-width: 22rem;
+  opacity: 0.9;
+}
+
+@media (max-width: 991px) {
+  .page {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .artSide {
+    display: none;
+  }
+
+  .formSide {
+    padding: var(--space-5) var(--space-4);
+  }
+}

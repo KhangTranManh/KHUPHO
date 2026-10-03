@@ -1,0 +1,67 @@
+.chart {
+  --axis-width: 2.75rem;
+  font-size: var(--fs-2xs);
+  color: var(--color-muted);
+}
+
+.legend {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-4);
+  margin-bottom: var(--space-4);
+  font-size: var(--fs-xs);
+  color: var(--color-text);
+}
+
+.legendItem {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+}
+
+.dot {
+  width: 0.5rem;
+  height: 0.5rem;
+  border-radius: 50%;
+  background-image: var(--tone-gradient);
+}
+
+.plot {
+  position: relative;
+  margin-left: var(--axis-width);
+}
+
+.grid {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+}
+
+.gridLine {
+  position: relative;
+  border-top: 1px dashed #e9ecef;
+}
+
+.tick {
+  position: absolute;
+  right: calc(100% + 0.5rem);
+  top: -0.6em;
+  line-height: 1;
+  white-space: nowrap;
+}
+
+.svg {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  overflow: visible;
+}
+
+.labels {
+  display: flex;
+  justify-content: space-between;
+  margin: var(--space-2) 0 0 var(--axis-width);
+}

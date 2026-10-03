@@ -1,0 +1,104 @@
+@import './tokens.css';
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+html,
+body,
+#root {
+  margin: 0;
+  min-height: 100%;
+}
+
+body {
+  font-family: var(--font-sans);
+  font-size: var(--fs-md);
+  font-weight: var(--fw-regular);
+  color: var(--color-text);
+  background: var(--color-bg);
+  line-height: 1.6;
+  -webkit-font-smoothing: antialiased;
+}
+
+a {
+  color: inherit;
+  text-decoration: none;
+}
+
+h1,
+h2,
+h3,
+h4,
+h5,
+h6 {
+  margin: 0;
+  color: var(--color-heading);
+  font-weight: var(--fw-bold);
+  line-height: 1.375;
+}
+
+p {
+  margin: 0;
+}
+
+button,
+input,
+select {
+  font: inherit;
+}
+
+/*
+ * Tông màu dùng chung: thêm class `tone-<tên>` vào phần tử,
+ * component bên trong đọc var(--tone-gradient) / var(--tone-solid).
+ */
+.tone-primary {
+  --tone-gradient: var(--gradient-primary);
+  --tone-solid: var(--color-primary);
+}
+.tone-dark {
+  --tone-gradient: var(--gradient-dark);
+  --tone-solid: var(--color-navy);
+}
+.tone-danger {
+  --tone-gradient: var(--gradient-danger);
+  --tone-solid: var(--color-danger);
+}
+.tone-warning {
+  --tone-gradient: var(--gradient-warning);
+  --tone-solid: #e08e0b;
+}
+.tone-success {
+  --tone-gradient: var(--gradient-success);
+  --tone-solid: var(--color-success);
+}
+.tone-info {
+  --tone-gradient: var(--gradient-info);
+  --tone-solid: var(--color-info);
+}
+.tone-secondary {
+  --tone-gradient: var(--gradient-secondary);
+  --tone-solid: var(--color-secondary);
+}
+.tone-flag {
+  --tone-gradient: var(--gradient-flag);
+  --tone-solid: var(--color-danger);
+}
+
+.text-gradient {
+  background-image: var(--tone-gradient);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
+
+.visually-hidden {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  white-space: nowrap;
+}

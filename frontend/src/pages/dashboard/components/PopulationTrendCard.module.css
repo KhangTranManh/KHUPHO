@@ -1,0 +1,18 @@
+.up,
+.down {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-1);
+}
+
+.up {
+  color: var(--color-success);
+}
+
+.down {
+  color: var(--color-danger);
+}
+
+.muted {
+  color: var(--color-text);
+}

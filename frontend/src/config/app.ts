@@ -1,0 +1,9 @@
+/** Cấu hình chung đọc từ biến môi trường (xem .env.example). */
+export const appConfig = {
+  name: import.meta.env.VITE_APP_NAME ?? 'Quản lý dân cư',
+  shortName: 'Khu phố số',
+  subtitle: 'Hệ thống quản lý nhân khẩu – hộ khẩu',
+  apiBaseUrl: import.meta.env.VITE_API_BASE_URL ?? '/api',
+  /** Dùng dữ liệu mẫu trong src/mocks thay cho API. Tắt bằng VITE_USE_MOCK=false. */
+  useMock: import.meta.env.VITE_USE_MOCK !== 'false',
+} as const;

@@ -1,0 +1,18 @@
+# MongoDB cho môi trường phát triển.
+#   cd database && docker compose up -d
+# Kết nối: mongodb://localhost:27017/webkhupho  (đặt MONGODB_URI trong backend/.env)
+# Dữ liệu lưu ở database/data/ (đã gitignore).
+services:
+  mongo:
+    image: mongo:8
+    container_name: webkhupho-mongo
+    restart: unless-stopped
+    ports:
+      - "127.0.0.1:27017:27017"
+    volumes:
+      - ./data:/data/db
+    healthcheck:
+      test: ["CMD", "mongosh", "--quiet", "--eval", "db.adminCommand('ping').ok"]
+      interval: 10s
+      timeout: 5s
+      retries: 5

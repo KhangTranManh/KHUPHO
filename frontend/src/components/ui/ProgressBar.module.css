@@ -1,0 +1,25 @@
+.wrap {
+  width: 100%;
+}
+
+.label {
+  display: block;
+  margin-bottom: var(--space-1);
+  font-size: var(--fs-xs);
+  font-weight: var(--fw-bold);
+  color: var(--color-text);
+}
+
+.track {
+  height: 3px;
+  border-radius: var(--radius-pill);
+  background: var(--color-border);
+  overflow: hidden;
+}
+
+.bar {
+  height: 100%;
+  border-radius: inherit;
+  background-image: var(--tone-gradient);
+  transition: width 0.6s ease;
+}

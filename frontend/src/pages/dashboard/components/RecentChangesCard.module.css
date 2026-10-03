@@ -1,0 +1,57 @@
+.all {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-1);
+  font-weight: var(--fw-bold);
+  color: var(--color-primary);
+}
+
+.timeline {
+  position: relative;
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+/* Đường dọc nối các mốc */
+.timeline::before {
+  content: '';
+  position: absolute;
+  top: 0.5rem;
+  bottom: 0.5rem;
+  left: 0.95rem;
+  border-left: 2px solid var(--color-border);
+}
+
+.item {
+  position: relative;
+  display: flex;
+  gap: var(--space-4);
+  padding-bottom: var(--space-4);
+}
+
+.item:last-child {
+  padding-bottom: 0;
+}
+
+.icon {
+  position: relative;
+  display: grid;
+  place-items: center;
+  flex-shrink: 0;
+  width: 2rem;
+  height: 2rem;
+  border-radius: 50%;
+  background: var(--color-surface);
+  color: var(--tone-solid);
+}
+
+.title {
+  font-size: var(--fs-sm);
+  font-weight: var(--fw-medium);
+}
+
+.meta {
+  font-size: var(--fs-xs);
+  color: var(--color-muted);
+}
