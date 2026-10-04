@@ -31,7 +31,7 @@ const CHANGE_NOTES: Partial<Record<ChangeType, string[]>> = {
 /** Trọng số loại biến động (lặp lại = xuất hiện nhiều hơn). */
 const CHANGE_TYPES: ChangeType[] = ['nhap_khau', 'nhap_khau', 'chuyen_di', 'sinh', 'sinh', 'tu_vong', 'tam_tru', 'tam_tru', 'tam_tru', 'tam_vang', 'tam_vang'];
 
-export const OFFICERS = ['Trần Quốc Huy', 'Lê Thị Mai', 'Phạm Đức Thành', 'Ngô Thị Lan', 'Đỗ Minh Khôi', 'Vũ Thu Hà'];
+const OFFICERS = ['Trần Quốc Huy', 'Lê Thị Mai', 'Phạm Đức Thành', 'Ngô Thị Lan', 'Đỗ Minh Khôi', 'Vũ Thu Hà'];
 
 const GROUP_COUNT = 7;
 const HOUSEHOLD_COUNT = 160;

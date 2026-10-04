@@ -1,53 +1,85 @@
 import { useState } from 'react';
 import { Avatar } from '@/components/ui/Avatar';
+import { Button } from '@/components/ui/Button';
 import { Card } from '@/components/ui/Card';
-import { IconBox } from '@/components/ui/IconBox';
-import { PageState } from '@/components/ui/PageState';
 import { Switch } from '@/components/ui/Switch';
-import { getCurrentOfficer } from '@/features/account/accountService';
-import { getGroups } from '@/features/households/householdService';
-import { useAsync } from '@/hooks/useAsync';
+import { useAuth } from '@/features/auth/AuthContext';
+import { ROLE_LABEL } from '@/features/auth/constants';
+import { ApiError } from '@/services/api';
 import styles from './ProfilePage.module.css';
 
 /** Tuỳ chọn thông báo — hiện chỉ lưu trong state, chưa gửi lên backend. */
 const NOTIFICATION_OPTIONS = [
   { key: 'newRecord', label: 'Có hồ sơ cư trú mới cần xử lý' },
-  { key: 'expiring', label: 'Tạm trú sắp hết hạn trong tổ phụ trách' },
-  { key: 'changes', label: 'Biến động nhân khẩu trong tổ phụ trách' },
-  { key: 'weekly', label: 'Báo cáo tổng hợp hằng tuần' },
+  { key: 'expiring', label: 'Tạm trú sắp hết hạn' },
+  { key: 'changes', label: 'Biến động nhân khẩu' },
   { key: 'system', label: 'Thông báo bảo trì hệ thống' },
 ] as const;
 
 type NotificationKey = (typeof NOTIFICATION_OPTIONS)[number]['key'];
 
+const dateTimeFmt = new Intl.DateTimeFormat('vi-VN', { dateStyle: 'short', timeStyle: 'short' });
+
+/** Hồ sơ của người đang đăng nhập — dùng cho cả 3 vai trò. */
 export function ProfilePage() {
-  const officer = useAsync(getCurrentOfficer, []);
-  const groups = useAsync(getGroups, []);
+  const { user, logoutAll } = useAuth();
   const [notify, setNotify] = useState<Record<NotificationKey, boolean>>({
     newRecord: true,
     expiring: true,
     changes: false,
-    weekly: true,
     system: false,
   });
+  const [busy, setBusy] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
-  if (!officer.data) return <PageState error={officer.error} />;
-  const me = officer.data;
-  const myGroups = (groups.data ?? []).filter((g) => me.groupIds.includes(g.id));
+  if (!user) return null;
+
+  const info: [string, string | undefined][] = [
+    ['Họ và tên', user.fullName],
+    ['Tên đăng nhập', user.username],
+    ['Vai trò', ROLE_LABEL[user.role]],
+    ['Số CCCD', user.citizenId],
+    ['Email', user.email],
+    ['Điện thoại', user.phone],
+  ];
+
+  const onLogoutAll = async () => {
+    setBusy(true);
+    setError(null);
+    try {
+      await logoutAll();
+    } catch (err) {
+      setError(err instanceof ApiError ? err.message : 'Không thực hiện được, vui lòng thử lại');
+      setBusy(false);
+    }
+  };
 
   return (
     <div className={styles.page}>
       <div className={styles.cover} aria-hidden="true" />
 
       <div className={styles.header}>
-        <Avatar name={me.fullName} size="xl" tone="primary" />
+        <Avatar name={user.fullName} size="xl" tone="primary" />
         <div>
-          <h5>{me.fullName}</h5>
-          <p className={styles.position}>{me.position}</p>
+          <h5>{user.fullName}</h5>
+          <p className={styles.position}>{ROLE_LABEL[user.role]}</p>
         </div>
       </div>
 
       <div className={styles.grid}>
+        <Card title="Thông tin tài khoản">
+          <dl className={styles.info}>
+            {info
+              .filter(([, value]) => value)
+              .map(([label, value]) => (
+                <div key={label} className={styles.infoRow}>
+                  <dt>{label}</dt>
+                  <dd>{value}</dd>
+                </div>
+              ))}
+          </dl>
+        </Card>
+
         <Card title="Cài đặt thông báo">
           <p className={styles.sectionLabel}>Nhận thông báo khi</p>
           <ul className={styles.switches}>
@@ -63,37 +95,26 @@ export function ProfilePage() {
           </ul>
         </Card>
 
-        <Card title="Thông tin cán bộ">
-          <p className={styles.bio}>{me.bio}</p>
+        <Card title="Bảo mật">
+          <p className={styles.bio}>
+            Lần đăng nhập gần nhất:{' '}
+            <strong>{user.lastLoginAt ? dateTimeFmt.format(new Date(user.lastLoginAt)) : '—'}</strong>
+          </p>
           <hr className={styles.divider} />
-          <dl className={styles.info}>
-            <dt>Họ và tên</dt>
-            <dd>{me.fullName}</dd>
-            <dt>Đơn vị</dt>
-            <dd>{me.unit}</dd>
-            <dt>Điện thoại</dt>
-            <dd>{me.phone}</dd>
-            <dt>Email</dt>
-            <dd>{me.email}</dd>
-          </dl>
-        </Card>
-
-        <Card title="Tổ dân phố phụ trách">
-          {!groups.data ? (
-            <PageState error={groups.error} />
-          ) : (
-            <ul className={styles.groups}>
-              {myGroups.map((g) => (
-                <li key={g.id}>
-                  <IconBox icon="mapPin" size="sm" tone="dark" />
-                  <div>
-                    <h6 className={styles.groupName}>{g.name}</h6>
-                    <p className={styles.groupLeader}>Tổ trưởng: {g.leaderName}</p>
-                  </div>
-                </li>
-              ))}
-            </ul>
-          )}
+          <p className={styles.bio}>
+            Nghi ngờ tài khoản bị dùng ở nơi khác? Đăng xuất khỏi mọi thiết bị, kể cả thiết bị này.
+          </p>
+          {error && <p className={styles.error}>{error}</p>}
+          <Button
+            variant="outline"
+            tone="danger"
+            icon="logOut"
+            className={styles.dangerButton}
+            onClick={onLogoutAll}
+            disabled={busy}
+          >
+            Đăng xuất mọi thiết bị
+          </Button>
         </Card>
       </div>
     </div>

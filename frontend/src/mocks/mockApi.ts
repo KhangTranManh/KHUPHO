@@ -9,8 +9,7 @@ import type { ResidentQuery } from '@/features/residents/residentService';
 import type { TemporaryQuery } from '@/features/temporary/temporaryService';
 import type { ListQuery, Paged } from '@/types/common';
 import { daysBetween, lastMonthLabels } from '@/utils/date';
-import type { Officer } from '@/features/account/types';
-import { db, OFFICERS } from './db';
+import { db } from './db';
 import { createRandom } from './random';
 
 const LATENCY_MS = 250;
@@ -155,16 +154,4 @@ export const mockApi = {
     ),
 
   dashboard: () => respond(buildDashboard()),
-
-  currentOfficer: () =>
-    respond<Officer>({
-      id: 'o1',
-      fullName: OFFICERS[0],
-      position: 'Cán bộ quản lý cư trú',
-      unit: 'Công an phường – Khu phố số',
-      phone: '0900 000 000',
-      email: 'canbo@khupho.local',
-      groupIds: ['g1', 'g2', 'g3'],
-      bio: 'Phụ trách tiếp nhận hồ sơ cư trú, cập nhật biến động dân cư và theo dõi tạm trú, tạm vắng tại các tổ được phân công.',
-    }),
 };

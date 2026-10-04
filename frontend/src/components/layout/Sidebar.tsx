@@ -1,6 +1,8 @@
 import { Link, NavLink } from 'react-router-dom';
 import { appConfig } from '@/config/app';
-import { ROUTES, sidebarNav } from '@/config/navigation';
+import { ROUTES, navForRole } from '@/config/navigation';
+import { useAuth } from '@/features/auth/AuthContext';
+import { homeFor } from '@/features/auth/constants';
 import { IconBox } from '@/components/ui/IconBox';
 import { Icon } from '@/components/ui/Icon';
 import styles from './Sidebar.module.css';
@@ -11,11 +13,14 @@ interface SidebarProps {
 }
 
 export function Sidebar({ open, onClose }: SidebarProps) {
+  const { user, logout } = useAuth();
+  if (!user) return null;
+
   return (
     <>
       <aside className={`${styles.sidebar} ${open ? styles.open : ''}`} aria-label="Điều hướng chính">
         <div className={styles.brandRow}>
-          <Link to={ROUTES.dashboard} className={styles.brand}>
+          <Link to={homeFor(user.role)} className={styles.brand}>
             <img src="/favicon.svg" alt="" className={styles.logo} />
             <span>
               <span className={styles.brandName}>{appConfig.name}</span>
@@ -30,7 +35,7 @@ export function Sidebar({ open, onClose }: SidebarProps) {
         <hr className={styles.divider} />
 
         <nav className={styles.nav}>
-          {sidebarNav.map((section, i) => (
+          {navForRole(user.role).map((section, i) => (
             <div key={section.title ?? i}>
               {section.title && <h6 className={styles.sectionTitle}>{section.title}</h6>}
               <ul className={styles.list}>
@@ -57,6 +62,14 @@ export function Sidebar({ open, onClose }: SidebarProps) {
               </ul>
             </div>
           ))}
+          <ul className={styles.list}>
+            <li>
+              <button type="button" className={styles.link} onClick={() => void logout()}>
+                <IconBox icon="logOut" size="sm" variant="plain" />
+                <span>Đăng xuất</span>
+              </button>
+            </li>
+          </ul>
         </nav>
 
         <div className={styles.help}>

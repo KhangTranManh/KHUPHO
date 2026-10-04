@@ -97,6 +97,17 @@
   background: rgba(255, 255, 255, 0.7);
 }
 
+/* Nút (Đăng xuất) trông giống link menu */
+button.link {
+  width: calc(100% - 2 * var(--space-4));
+  border: 0;
+  background: none;
+  font: inherit;
+  font-size: var(--fs-sm);
+  text-align: left;
+  cursor: pointer;
+}
+
 .active,
 .active:hover {
   background: var(--color-surface);

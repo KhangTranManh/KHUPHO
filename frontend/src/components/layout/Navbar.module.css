@@ -103,3 +103,8 @@
     display: none;
   }
 }
+
+.role {
+  font-weight: var(--fw-regular);
+  color: var(--color-muted);
+}

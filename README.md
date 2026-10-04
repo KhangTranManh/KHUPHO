@@ -46,6 +46,9 @@ WEBKHUPHO/
   Mặc định dùng dữ liệu mẫu; đặt `VITE_USE_MOCK=false` để gọi API thật (`/api/residents`, `/api/households`,
   `/api/temporary-records`, `/api/changes`, `/api/dashboard/summary`, `/api/groups`, `/api/me`).
   Danh sách nhận query `?search=&filter=&page=&pageSize=` và trả `{ items, total, page, pageSize }`.
+- **Đăng nhập:** `features/auth/` (AuthProvider, RequireAuth / RequireRole) luôn gọi backend thật, kể cả khi bật mock.
+  Access token chỉ giữ trong bộ nhớ; tải lại trang thì khôi phục bằng refresh cookie.
+  Menu và route lọc theo vai trò: `admin`, `can_bo` vào trang quản lý; `nguoi_dan` hiện chỉ có `/ho-so`.
 - **Thêm trang mới:** thêm đường dẫn vào `ROUTES` → route trong `app/router.tsx` → mục trong `sidebarNav`.
   Trang danh sách: dùng `useListQuery` + `ListToolbar` + `ListView`, chỉ cần khai báo cột.
 
@@ -59,4 +62,4 @@ npm run dev             # http://localhost:5173
 npm run build           # typecheck + build ra dist/
 ```
 
-Dev server proxy `/api` → `http://localhost:4000` (xem `vite.config.ts`).
+Đăng nhập cần backend đang chạy (`cd backend && npm run dev`). Dev server proxy `/api` → `http://localhost:4000` (xem `vite.config.ts`).
