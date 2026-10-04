@@ -6,7 +6,7 @@ Node.js 22+ · Express 5 · TypeScript · MongoDB (Mongoose) · Zod · JWT
 
 ```bash
 cd backend
-cp .env.example .env          # điền JWT_ACCESS_SECRET, MONGODB_URI
+# cấu hình nằm ở .env thư mục gốc (cp ../.env.example ../.env nếu chưa có)
 npm install
 npm run seed:users            # tạo 3 tài khoản mẫu, in mật khẩu ra màn hình
 npm run dev                   # http://localhost:4000/api

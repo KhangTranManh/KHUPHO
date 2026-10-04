@@ -1,5 +1,12 @@
-import 'dotenv/config';
+import { config as loadDotenv } from 'dotenv';
+import { join } from 'node:path';
+import { fileURLToPath } from 'node:url';
 import { z } from 'zod';
+
+// Đọc .env ở thư mục gốc dự án (file cấu hình chung). Nếu có backend/.env thì giá trị trong đó được ưu tiên.
+// Biến môi trường thật (đặt trên server / CI) luôn được ưu tiên hơn cả hai file.
+const backendDir = fileURLToPath(new URL('../..', import.meta.url));
+loadDotenv({ path: [join(backendDir, '.env'), join(backendDir, '..', '.env')], quiet: true });
 
 /**
  * Biến môi trường được kiểm tra một lần lúc khởi động.
@@ -36,7 +43,7 @@ function loadEnv() {
 
   if (!parsed.success) {
     const lines = parsed.error.issues.map((i) => `  - ${i.path.join('.')}: ${i.message}`);
-    throw new Error(`Cấu hình môi trường không hợp lệ (xem backend/.env.example):\n${lines.join('\n')}`);
+    throw new Error(`Cấu hình môi trường không hợp lệ (xem .env.example ở thư mục gốc):\n${lines.join('\n')}`);
   }
 
   const data = parsed.data;

@@ -1,6 +1,6 @@
 # MongoDB cho môi trường phát triển.
 #   cd database && docker compose up -d
-# Kết nối: mongodb://localhost:27017/webkhupho  (đặt MONGODB_URI trong backend/.env)
+# Kết nối: mongodb://localhost:27017/webkhupho  (đặt MONGODB_URI trong .env ở thư mục gốc)
 # Dữ liệu lưu ở database/data/ (đã gitignore).
 services:
   mongo:

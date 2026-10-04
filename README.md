@@ -12,7 +12,7 @@ WEBKHUPHO/
 ├── frontend/          React 19 + Vite + TypeScript
 ├── backend/           Express 5 + TypeScript + Mongoose (xem backend/README.md)
 ├── database/          MongoDB: docker-compose + tài liệu collection
-├── .env.example       chỉ dẫn: mỗi phần có .env riêng
+├── .env.example       mẫu cấu hình chung (DB, backend, frontend, tài khoản mẫu) → sao chép thành .env
 ├── .editorconfig
 └── .gitignore
 ```
@@ -56,7 +56,7 @@ WEBKHUPHO/
 
 ```bash
 cd frontend
-cp .env.example .env    # tuỳ chọn
+cp ../.env.example ../.env   # nếu chưa có .env ở thư mục gốc
 npm install
 npm run dev             # http://localhost:5173
 npm run build           # typecheck + build ra dist/

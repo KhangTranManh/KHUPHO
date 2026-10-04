@@ -10,7 +10,7 @@ cd database
 docker compose up -d          # MongoDB 8 tại localhost:27017, dữ liệu ở database/data/
 ```
 
-Hoặc dùng MongoDB Atlas: đặt chuỗi kết nối vào `MONGODB_URI` trong `backend/.env`.
+Hoặc dùng MongoDB Atlas: đặt chuỗi kết nối vào `MONGODB_URI` trong `.env` ở thư mục gốc.
 
 Sau đó tạo tài khoản mẫu:
 

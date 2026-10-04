@@ -1,4 +1,4 @@
-/** Cấu hình chung đọc từ biến môi trường (xem .env.example). */
+/** Cấu hình chung đọc từ biến môi trường (xem .env.example ở thư mục gốc). */
 export const appConfig = {
   name: import.meta.env.VITE_APP_NAME ?? 'Quản lý dân cư',
   shortName: 'Khu phố số',
