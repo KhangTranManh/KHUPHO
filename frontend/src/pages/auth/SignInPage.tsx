@@ -5,7 +5,8 @@ import { Icon } from '@/components/ui/Icon';
 import { TextField } from '@/components/ui/TextField';
 import { appConfig } from '@/config/app';
 import { useAuth } from '@/features/auth/AuthContext';
-import { homeFor } from '@/features/auth/constants';
+import { ROLE_LABEL, homeFor } from '@/features/auth/constants';
+import { useAsync } from '@/hooks/useAsync';
 import type { SignInLocationState } from '@/features/auth/RequireAuth';
 import { ApiError } from '@/services/api';
 import styles from './SignInPage.module.css';
@@ -20,6 +21,14 @@ export function SignInPage() {
   const [password, setPassword] = useState('');
   const [error, setError] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
+  // Chỉ tải danh sách tài khoản demo khi bật VITE_AUTH_MODE=demo (không lọt vào bundle ở chế độ thật).
+  const demoAccounts = useAsync(
+    () =>
+      appConfig.demoAuth
+        ? import('@/mocks/demoAuth').then((m) => m.DEMO_ACCOUNTS)
+        : Promise.resolve([]),
+    [],
+  );
 
   // Đã đăng nhập (VD: mở lại trang này) → vào thẳng.
   if (user) return <Navigate to={from ?? homeFor(user.role)} replace />;
@@ -57,6 +66,31 @@ export function SignInPage() {
           <p className={styles.lead}>
             Cán bộ đăng nhập bằng tài khoản được cấp. Người dân đăng nhập bằng số CCCD.
           </p>
+
+          {demoAccounts.data && demoAccounts.data.length > 0 && (
+            <div className={styles.demo}>
+              <p className={styles.demoTitle}>Chế độ demo — chọn tài khoản để điền sẵn:</p>
+              <div className={styles.demoList}>
+                {demoAccounts.data.map((a) => (
+                  <button
+                    key={a.username}
+                    type="button"
+                    className={styles.demoItem}
+                    onClick={() => {
+                      setUsername(a.username);
+                      setPassword(a.password);
+                      setError(null);
+                    }}
+                  >
+                    <strong>{ROLE_LABEL[a.role]}</strong>
+                    <span>
+                      {a.username} / {a.password}
+                    </span>
+                  </button>
+                ))}
+              </div>
+            </div>
+          )}
 
           {(error ?? notice) && (
             <div className={`${styles.alert} ${error ? styles.alertError : ''}`} role="alert">
