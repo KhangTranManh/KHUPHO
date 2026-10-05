@@ -192,3 +192,23 @@
     padding: var(--space-5) var(--space-4);
   }
 }
+
+/* Nút dạng liên kết (chuyển form, điền mật khẩu tạm) */
+.linkButton {
+  padding: 0;
+  border: 0;
+  background: none;
+  color: var(--color-primary);
+  font: inherit;
+  font-weight: var(--fw-bold);
+  cursor: pointer;
+}
+
+.linkButton:hover {
+  text-decoration: underline;
+}
+
+.linkButton code {
+  font-size: var(--fs-sm);
+  letter-spacing: 0.08em;
+}

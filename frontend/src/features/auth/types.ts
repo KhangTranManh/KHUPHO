@@ -14,6 +14,14 @@ export interface AuthUser {
   householdId?: string;
   memberId?: string;
   lastLoginAt?: string;
+  /** Vừa đăng nhập bằng mật khẩu tạm (SMS) → phải đổi mật khẩu trước khi dùng app. */
+  mustChangePassword?: boolean;
+}
+
+/** Kết quả xin mật khẩu tạm. `devTempPassword` chỉ có khi backend dùng SMS mock (không phải production). */
+export interface TempPasswordResult {
+  message: string;
+  devTempPassword?: string;
 }
 
 /** `reason` cho biết vì sao chưa đăng nhập: để trang đăng nhập hiện thông báo phù hợp. */

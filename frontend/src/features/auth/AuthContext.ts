@@ -6,8 +6,12 @@ export interface AuthContextValue {
   /** Người đang đăng nhập, null nếu chưa. */
   user: AuthUser | null;
   login: (identifier: string, password: string) => Promise<AuthUser>;
+  /** Đăng nhập bằng ID token Firebase (sau khi nhập đúng OTP). */
+  loginWithFirebase: (idToken: string) => Promise<AuthUser>;
   logout: () => Promise<void>;
   logoutAll: () => Promise<void>;
+  /** Đổi mật khẩu; `currentPassword` không cần khi vừa đăng nhập bằng mật khẩu tạm. */
+  changePassword: (newPassword: string, currentPassword?: string) => Promise<AuthUser>;
 }
 
 export const AuthContext = createContext<AuthContextValue | null>(null);

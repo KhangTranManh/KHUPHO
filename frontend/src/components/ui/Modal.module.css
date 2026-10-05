@@ -25,6 +25,10 @@
   max-width: 44rem;
 }
 
+.xl {
+  max-width: 72rem;
+}
+
 .header {
   display: flex;
   align-items: center;

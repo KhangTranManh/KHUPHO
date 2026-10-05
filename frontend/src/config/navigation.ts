@@ -22,6 +22,7 @@ export const ROUTES = {
   // Tài khoản
   profile: '/ho-so',
   signIn: '/dang-nhap',
+  changePassword: '/doi-mat-khau',
 } as const;
 
 export interface NavItem {

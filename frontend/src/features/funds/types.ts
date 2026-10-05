@@ -75,3 +75,30 @@ export interface MarkPaidResult {
   payment: FundPayment;
   notified: boolean;
 }
+
+/** GET /funds/:id/my-payment — khoản phải đóng của hộ người đang đăng nhập + thông tin chuyển khoản. */
+export interface MyFundPayment {
+  fundId: string;
+  householdCode: string;
+  amountDue: number | null;
+  /** Nội dung chuyển khoản chuẩn để tự đối soát, VD "QKP VINGUOINGHEO HK1001". */
+  transferContent: string;
+  bank?: FundBankAccount;
+  /** true = có webhook ngân hàng → tiền về là tự ghi nhận, không cần chờ trưởng KP. */
+  autoConfirm: boolean;
+  payment?: FundPayment;
+}
+
+/** Kết quả đối soát một giao dịch ngân hàng (xem backend bankTransaction.model.ts). */
+export type BankTxStatus = 'matched' | 'unmatched' | 'underpaid' | 'already_paid' | 'fund_closed';
+
+export interface BankTransaction {
+  id: string;
+  amount: number;
+  content: string;
+  referenceCode?: string;
+  transactionAt: string;
+  status: BankTxStatus;
+  householdCode?: string;
+  note?: string;
+}

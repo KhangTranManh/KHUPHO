@@ -1,11 +1,11 @@
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { Badge } from '@/components/ui/Badge';
 import { Button } from '@/components/ui/Button';
-import { Card } from '@/components/ui/Card';
 import { CellStack, type Column } from '@/components/ui/DataTable';
 import { Icon } from '@/components/ui/Icon';
 import { ListToolbar } from '@/components/ui/ListToolbar';
 import { ListView } from '@/components/ui/ListView';
+import { Modal } from '@/components/ui/Modal';
 import { Tabs, type TabOption } from '@/components/ui/Tabs';
 import { PAYMENT_METHOD_LABEL, formatCurrency } from '@/features/funds/constants';
 import { getFundHouseholds, remindUnpaid } from '@/features/funds/fundService';
@@ -13,7 +13,10 @@ import type { FundHouseholdFilter, FundHouseholdStatus, FundSummary } from '@/fe
 import { useListQuery } from '@/hooks/useListQuery';
 import { formatDateTime } from '@/utils/format';
 import { MarkPaidModal } from './MarkPaidModal';
-import styles from './FundHouseholdsCard.module.css';
+import styles from './FundHouseholdsModal.module.css';
+
+/** Tự làm mới khi đang mở — thấy ngay hộ vừa chuyển khoản (webhook ngân hàng ghi nhận). */
+const REFRESH_MS = 10_000;
 
 const TABS: TabOption<FundHouseholdFilter | 'all'>[] = [
   { value: 'all', label: 'Tất cả' },
@@ -28,13 +31,25 @@ interface Props {
   onClose: () => void;
 }
 
-/** Danh sách hộ của một quỹ: ai đã đóng, ai chưa; đánh dấu đã đóng và gửi thông báo. */
-export function FundHouseholdsCard({ fund, onPaid, onClose }: Props) {
+/**
+ * Cửa sổ danh sách thu của một quỹ: ai đã đóng, ai chưa; đánh dấu đã đóng (tiền mặt) và nhắc hộ chưa đóng.
+ * Khoản chuyển khoản qua QR được ghi tự động — danh sách tự làm mới mỗi 10 giây.
+ */
+export function FundHouseholdsModal({ fund, onPaid, onClose }: Props) {
   const fetcher = useMemo(() => (q: Parameters<typeof getFundHouseholds>[1]) => getFundHouseholds(fund.id, q), [fund.id]);
   const list = useListQuery(fetcher);
   const [paying, setPaying] = useState<FundHouseholdStatus | null>(null);
   const [notice, setNotice] = useState<string | null>(null);
   const [reminding, setReminding] = useState(false);
+
+  const reloadList = list.reload;
+  useEffect(() => {
+    const timer = setInterval(() => {
+      reloadList();
+      onPaid();
+    }, REFRESH_MS);
+    return () => clearInterval(timer);
+  }, [reloadList, onPaid]);
 
   /** Gửi thông báo nhắc tới mọi hộ chưa đóng quỹ này. */
   const onRemind = async () => {
@@ -86,21 +101,15 @@ export function FundHouseholdsCard({ fund, onPaid, onClose }: Props) {
   ];
 
   return (
-    <Card
-      title={`Danh sách thu: ${fund.name}`}
-      subtitle={list.data && `${list.data.total} hộ`}
-      action={
-        <div className={styles.actions}>
-          <Button size="sm" variant="outline" icon="bell" onClick={onRemind} disabled={reminding}>
-            Nhắc hộ chưa đóng
-          </Button>
-          <Button size="sm" variant="white" icon="x" onClick={onClose}>
-            Đóng
-          </Button>
-        </div>
-      }
-      flush
-    >
+    <Modal open title={`Danh sách thu: ${fund.name}`} onClose={onClose} size="xl">
+      <div className={styles.head}>
+        <span className={styles.summary}>
+          {list.data && `${list.data.total} hộ`} · tự cập nhật khi có chuyển khoản
+        </span>
+        <Button size="sm" variant="outline" icon="bell" onClick={onRemind} disabled={reminding}>
+          Nhắc hộ chưa đóng
+        </Button>
+      </div>
       {notice && (
         <p className={styles.notice} role="status">
           <Icon name="checkCircle" size={16} /> {notice}
@@ -125,6 +134,6 @@ export function FundHouseholdsCard({ fund, onPaid, onClose }: Props) {
           onPaid();
         }}
       />
-    </Card>
+    </Modal>
   );
 }

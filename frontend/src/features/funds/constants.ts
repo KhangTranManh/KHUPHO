@@ -1,4 +1,4 @@
-import type { Fund, FundUnit, PaymentMethod } from './types';
+import type { BankTxStatus, Fund, FundBankAccount, FundUnit, PaymentMethod } from './types';
 
 export const PAYMENT_METHOD_LABEL: Record<PaymentMethod, string> = {
   qr: 'Quét QR',
@@ -21,17 +21,20 @@ export const fundAmountText = (fund: Pick<Fund, 'defaultAmount' | 'unit'>) =>
 export const fundPeriodText = (fund: Pick<Fund, 'period'>) =>
   fund.period.type === 'nam' ? `Năm ${fund.period.year}` : `${fund.period.label ?? 'Đợt'} · ${fund.period.year}`;
 
-/** Nội dung chuyển khoản chuẩn để đối soát: "<mã quỹ> <số hộ>". */
-export const transferContent = (fund: Pick<Fund, 'code'>, householdCode?: string) =>
-  householdCode ? `${fund.code} ${householdCode}` : fund.code;
-
-/** Ảnh mã VietQR (img.vietqr.io) cho quỹ có tài khoản nhận; undefined nếu chưa cấu hình. */
-export function vietQrImageUrl(fund: Fund, householdCode?: string) {
-  if (!fund.bank) return undefined;
-  const qs = new URLSearchParams({
-    addInfo: transferContent(fund, householdCode),
-    accountName: fund.bank.accountName,
-  });
-  if (fund.defaultAmount && fund.unit === 'ho') qs.set('amount', String(fund.defaultAmount));
-  return `https://img.vietqr.io/image/${fund.bank.bin}-${fund.bank.accountNo}-compact2.png?${qs}`;
+/**
+ * Ảnh mã VietQR (img.vietqr.io) — quét bằng app ngân hàng là điền sẵn số tiền + nội dung.
+ * Nội dung chuyển khoản do backend tạo ("QKP <MÃ QUỸ> <SỐ HỘ>") để tự đối soát — không tự ghép ở frontend.
+ */
+export function vietQrImageUrl(bank: FundBankAccount, content: string, amount?: number | null) {
+  const qs = new URLSearchParams({ addInfo: content, accountName: bank.accountName });
+  if (amount) qs.set('amount', String(amount));
+  return `https://img.vietqr.io/image/${bank.bin}-${bank.accountNo}-compact2.png?${qs}`;
 }
+
+export const BANK_TX_STATUS_LABEL: Record<BankTxStatus, string> = {
+  matched: 'Đã tự ghi nhận',
+  unmatched: 'Sai nội dung',
+  underpaid: 'Chuyển thiếu',
+  already_paid: 'Chuyển trùng',
+  fund_closed: 'Quỹ đã đóng',
+};

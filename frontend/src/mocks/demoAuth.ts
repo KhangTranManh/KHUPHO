@@ -3,7 +3,7 @@
  * Mật khẩu nằm trong code JavaScript nên ai cũng đọc được → TUYỆT ĐỐI không dùng với dữ liệu thật.
  * Phiên lưu ở sessionStorage: F5 vẫn còn, đóng tab là mất.
  */
-import type { AuthUser } from '@/features/auth/types';
+import type { AuthUser, TempPasswordResult } from '@/features/auth/types';
 import { ApiError } from '@/services/api';
 
 /** `login` = SĐT hoặc email dùng để đăng nhập. Cư dân liên kết hộ HK-1001 trong dữ liệu mẫu. */
@@ -45,16 +45,50 @@ export function currentDemoUser(): AuthUser | null {
   }
 }
 
+/** Mật khẩu tạm đang chờ dùng (theo SĐT) — chỉ sống trong tab hiện tại. */
+const tempPasswords = new Map<string, string>();
+
 export const demoAuth = {
   async login(identifier: string, password: string): Promise<AuthUser> {
     await wait();
-    const account = DEMO_ACCOUNTS.find((a) => a.login === normalizeLogin(identifier) && a.password === password);
-    if (!account) {
+    const login = normalizeLogin(identifier);
+    const account = DEMO_ACCOUNTS.find((a) => a.login === login);
+    const viaTemp = !!account && tempPasswords.get(login) === password.trim().toUpperCase();
+    if (!account || (account.password !== password && !viaTemp)) {
       throw new ApiError(401, 'INVALID_CREDENTIALS', 'Tên đăng nhập hoặc mật khẩu không đúng');
     }
-    const user = toUser(account);
+    tempPasswords.delete(login);
+    const user = { ...toUser(account), mustChangePassword: viaTemp };
     save(user);
     return user;
+  },
+
+  /** Như backend với SMS mock: không gửi thật, trả mật khẩu tạm để hiện trên màn hình. */
+  async requestTempPassword(phone: string): Promise<TempPasswordResult> {
+    await wait();
+    const login = normalizeLogin(phone);
+    const message = 'Nếu số điện thoại đã đăng ký với khu phố, mật khẩu tạm sẽ được gửi qua SMS trong giây lát.';
+    if (!DEMO_ACCOUNTS.some((a) => a.login === login)) return { message };
+    const temp = Array.from({ length: 8 }, () => 'ABCDEFGHJKMNPQRSTUVWXYZ23456789'[Math.floor(Math.random() * 31)]).join('');
+    tempPasswords.set(login, temp);
+    return { message, devTempPassword: temp };
+  },
+
+  /** Demo không lưu mật khẩu mới (tải lại trang vẫn dùng mật khẩu mẫu) — chỉ bỏ cờ bắt buộc đổi. */
+  async changePassword(newPassword: string, currentPassword?: string): Promise<AuthUser> {
+    await wait();
+    const user = currentDemoUser();
+    if (!user) throw new ApiError(401, 'UNAUTHORIZED', 'Chưa đăng nhập hoặc phiên đăng nhập đã hết hạn');
+    const account = DEMO_ACCOUNTS.find((a) => a.id === user.id);
+    if (!user.mustChangePassword && currentPassword !== account?.password) {
+      throw new ApiError(400, 'BAD_REQUEST', 'Mật khẩu hiện tại không đúng');
+    }
+    if (newPassword.length < 8 || !/[A-Za-z]/.test(newPassword) || !/\d/.test(newPassword)) {
+      throw new ApiError(400, 'VALIDATION_ERROR', 'Mật khẩu ít nhất 8 ký tự, có cả chữ và số');
+    }
+    const updated = { ...user, mustChangePassword: false };
+    save(updated);
+    return updated;
   },
 
   async restoreSession(): Promise<AuthUser | null> {

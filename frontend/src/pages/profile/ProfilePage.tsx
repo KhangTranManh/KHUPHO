@@ -1,8 +1,10 @@
 import { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { Avatar } from '@/components/ui/Avatar';
 import { Button } from '@/components/ui/Button';
 import { Card } from '@/components/ui/Card';
 import { Switch } from '@/components/ui/Switch';
+import { ROUTES } from '@/config/navigation';
 import { useAuth } from '@/features/auth/AuthContext';
 import { ROLE_LABEL } from '@/features/auth/constants';
 import { ApiError } from '@/services/api';
@@ -23,6 +25,7 @@ const dateTimeFmt = new Intl.DateTimeFormat('vi-VN', { dateStyle: 'short', timeS
 /** Hồ sơ của người đang đăng nhập — dùng cho cả 3 vai trò. */
 export function ProfilePage() {
   const { user, logoutAll } = useAuth();
+  const navigate = useNavigate();
   const [notify, setNotify] = useState<Record<NotificationKey, boolean>>({
     newRecord: true,
     expiring: true,
@@ -98,6 +101,9 @@ export function ProfilePage() {
             Lần đăng nhập gần nhất:{' '}
             <strong>{user.lastLoginAt ? dateTimeFmt.format(new Date(user.lastLoginAt)) : '—'}</strong>
           </p>
+          <Button variant="outline" icon="lock" className={styles.dangerButton} onClick={() => navigate(ROUTES.changePassword)}>
+            Đổi mật khẩu
+          </Button>
           <hr className={styles.divider} />
           <p className={styles.bio}>
             Nghi ngờ tài khoản bị dùng ở nơi khác? Đăng xuất khỏi mọi thiết bị, kể cả thiết bị này.

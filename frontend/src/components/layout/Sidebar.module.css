@@ -7,10 +7,16 @@
   width: var(--sidebar-width);
   display: flex;
   flex-direction: column;
+  overflow-x: hidden; /* không có thanh cuộn ngang */
   overflow-y: auto;
   border-radius: var(--radius-xl);
   scrollbar-width: thin;
   transition: transform 0.3s ease;
+}
+
+/* Sidebar là flex cột có cuộn dọc: không cho phần tử con bị ép co (thẻ "Cần hỗ trợ?" từng bị bẹp). */
+.sidebar > * {
+  flex-shrink: 0;
 }
 
 .brandRow {
@@ -63,7 +69,7 @@
 }
 
 .nav {
-  flex: 1;
+  flex: 1 0 auto;
 }
 
 .sectionTitle {
@@ -89,8 +95,14 @@
   border-radius: var(--radius-md);
   font-size: var(--fs-sm);
   color: var(--color-text);
-  white-space: nowrap;
   transition: background var(--transition), box-shadow var(--transition);
+}
+
+/* Nhãn dài ("Thông báo & tuyên truyền") xuống dòng thay vì tràn ra ngoài. */
+.link > span {
+  min-width: 0;
+  line-height: 1.3;
+  overflow-wrap: anywhere;
 }
 
 .link:hover {

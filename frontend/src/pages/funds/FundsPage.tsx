@@ -8,13 +8,16 @@ import { getFunds } from '@/features/funds/fundService';
 import type { FundSummary } from '@/features/funds/types';
 import { useAsync } from '@/hooks/useAsync';
 import { formatDate, formatNumber } from '@/utils/format';
-import { FundHouseholdsCard } from './components/FundHouseholdsCard';
+import { BankIssuesCard } from './components/BankIssuesCard';
+import { FundHouseholdsModal } from './components/FundHouseholdsModal';
 import { FundQrModal } from './components/FundQrModal';
 import styles from './FundsPage.module.css';
 
 /**
- * Thu quỹ dân sinh. Luồng: Mở QR → Đánh dấu đã đóng → Liên kết danh sách hộ → Gửi thông báo đến hộ.
- * Người dân: xem các khoản và mã QR. Cán bộ: thêm danh sách thu theo hộ.
+ * Thu quỹ dân sinh.
+ *  - Cư dân: mở mã QR riêng của hộ → chuyển khoản → webhook ngân hàng tự ghi "đã đóng" + báo hộ.
+ *  - Trưởng KP: danh sách thu (cửa sổ nổi, tự làm mới), đánh dấu tiền mặt, nhắc hộ chưa đóng,
+ *    xem chuyển khoản không tự ghi nhận được để đối soát.
  */
 export function FundsPage() {
   const isLeader = useIsLeader();
@@ -63,11 +66,13 @@ export function FundsPage() {
         })}
       </div>
 
+      {isLeader && <BankIssuesCard />}
+
       {isLeader && selected && (
-        <FundHouseholdsCard key={selected.id} fund={selected} onPaid={funds.reload} onClose={() => setSelectedId(null)} />
+        <FundHouseholdsModal key={selected.id} fund={selected} onPaid={funds.reload} onClose={() => setSelectedId(null)} />
       )}
 
-      <FundQrModal fund={qrFund} onClose={() => setQrFund(null)} />
+      <FundQrModal fund={qrFund} onClose={() => setQrFund(null)} onPaid={funds.reload} />
     </div>
   );
 }

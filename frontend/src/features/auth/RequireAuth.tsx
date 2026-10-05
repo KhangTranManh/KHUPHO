@@ -24,6 +24,9 @@ export function RequireAuth({ children }: { children: ReactNode }) {
     return <Navigate to={ROUTES.signIn} replace state={{ from } satisfies SignInLocationState} />;
   }
 
+  // Vừa đăng nhập bằng mật khẩu tạm → phải đổi mật khẩu trước.
+  if (state.user.mustChangePassword) return <Navigate to={ROUTES.changePassword} replace />;
+
   return children;
 }
 

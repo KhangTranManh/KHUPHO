@@ -5,6 +5,11 @@ interface ImportMetaEnv {
   readonly VITE_API_BASE_URL?: string;
   readonly VITE_USE_MOCK?: string;
   readonly VITE_AUTH_MODE?: 'api' | 'demo';
+  readonly VITE_PHONE_AUTH?: 'firebase' | 'temp_password';
+  readonly VITE_FIREBASE_API_KEY?: string;
+  readonly VITE_FIREBASE_AUTH_DOMAIN?: string;
+  readonly VITE_FIREBASE_PROJECT_ID?: string;
+  readonly VITE_FIREBASE_APP_ID?: string;
 }
 
 interface ImportMeta {

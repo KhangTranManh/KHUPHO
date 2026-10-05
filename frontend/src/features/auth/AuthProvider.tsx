@@ -55,6 +55,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     return user;
   }, []);
 
+  const loginWithFirebase = useCallback(async (idToken: string) => {
+    const user = await authService.loginWithFirebase(idToken);
+    setState({ status: 'authenticated', user });
+    return user;
+  }, []);
+
   const logout = useCallback(async () => {
     try {
       await authService.logout();
@@ -70,15 +76,23 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     broadcastLogout();
   }, []);
 
+  const changePassword = useCallback(async (newPassword: string, currentPassword?: string) => {
+    const user = await authService.changePassword(newPassword, currentPassword);
+    setState({ status: 'authenticated', user });
+    return user;
+  }, []);
+
   const value = useMemo<AuthContextValue>(
     () => ({
       state,
       user: state.status === 'authenticated' ? state.user : null,
       login,
+      loginWithFirebase,
       logout,
       logoutAll,
+      changePassword,
     }),
-    [state, login, logout, logoutAll],
+    [state, login, loginWithFirebase, logout, logoutAll, changePassword],
   );
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;

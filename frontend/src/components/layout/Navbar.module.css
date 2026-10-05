@@ -12,6 +12,17 @@
   transition: background var(--transition), box-shadow var(--transition);
 }
 
+/* Che khoảng trống phía trên navbar khi cuộn — nội dung trang không lộ ra giữa mép màn hình và navbar. */
+.scrolled::before {
+  content: '';
+  position: absolute;
+  bottom: 100%;
+  left: calc(-1 * var(--space-5));
+  right: calc(-1 * var(--space-5));
+  height: var(--layout-gap);
+  background: var(--color-bg);
+}
+
 .scrolled {
   background: rgba(255, 255, 255, 0.8);
   backdrop-filter: saturate(200%) blur(30px);

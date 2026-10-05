@@ -1,6 +1,6 @@
 import { appConfig } from '@/config/app';
 import { apiPost, refreshSession, setAccessToken } from '@/services/api';
-import type { AuthUser } from './types';
+import type { AuthUser, TempPasswordResult } from './types';
 
 /*
  * Mặc định gọi backend thật — cần chạy backend: cd backend && npm run dev.
@@ -26,6 +26,13 @@ export async function login(identifier: string, password: string): Promise<AuthU
   return data.user;
 }
 
+/** Đăng nhập bằng SĐT đã xác minh OTP qua Firebase (đăng nhập lần đầu / quên mật khẩu). */
+export async function loginWithFirebase(idToken: string): Promise<AuthUser> {
+  const data = await apiPost<LoginResponse>('/auth/firebase-login', { idToken });
+  setAccessToken(data.accessToken);
+  return data.user;
+}
+
 /** Khôi phục phiên khi tải lại trang (dựa vào refresh cookie). Không còn phiên → null. */
 export async function restoreSession(): Promise<AuthUser | null> {
   if (appConfig.demoAuth) return (await loadDemo()).restoreSession();
@@ -46,6 +53,20 @@ export async function logout() {
   } finally {
     setAccessToken(null);
   }
+}
+
+/** Gửi mật khẩu tạm qua SMS tới SĐT (đăng nhập lần đầu / quên mật khẩu). */
+export async function requestTempPassword(phone: string): Promise<TempPasswordResult> {
+  if (appConfig.demoAuth) return (await loadDemo()).requestTempPassword(phone);
+
+  return apiPost<TempPasswordResult>('/auth/temp-password', { phone });
+}
+
+export async function changePassword(newPassword: string, currentPassword?: string): Promise<AuthUser> {
+  if (appConfig.demoAuth) return (await loadDemo()).changePassword(newPassword, currentPassword);
+
+  const data = await apiPost<{ user: AuthUser }>('/auth/change-password', { newPassword, currentPassword });
+  return data.user;
 }
 
 export async function logoutAll() {

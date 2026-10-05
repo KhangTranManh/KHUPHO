@@ -30,6 +30,11 @@ export const router = createBrowserRouter([
     lazy: () => import('@/pages/auth/SignInPage').then((m) => ({ Component: m.SignInPage })),
   },
   {
+    // Ngoài RequireAuth: trang tự kiểm tra đăng nhập (RequireAuth chuyển hướng tới đây khi phải đổi mật khẩu).
+    path: ROUTES.changePassword,
+    lazy: () => import('@/pages/auth/ChangePasswordPage').then((m) => ({ Component: m.ChangePasswordPage })),
+  },
+  {
     path: ROUTES.dashboard,
     element: (
       <RequireAuth>

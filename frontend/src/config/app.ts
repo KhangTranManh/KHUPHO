@@ -8,4 +8,20 @@ export const appConfig = {
   useMock: import.meta.env.VITE_USE_MOCK !== 'false',
   /** VITE_AUTH_MODE=demo: đăng nhập bằng tài khoản mẫu ngay trên trình duyệt, không cần backend. Chỉ để xem thử. */
   demoAuth: import.meta.env.VITE_AUTH_MODE === 'demo',
+  /**
+   * Đăng nhập lần đầu / quên mật khẩu:
+   *   firebase = OTP SMS qua Firebase (cần VITE_FIREBASE_* và backend có FIREBASE_PROJECT_ID);
+   *   khác     = mật khẩu tạm do backend gửi (SMS mock).
+   * Chế độ demo luôn dùng mật khẩu tạm.
+   */
+  phoneAuth:
+    import.meta.env.VITE_PHONE_AUTH === 'firebase' && import.meta.env.VITE_AUTH_MODE !== 'demo' ? 'firebase' : 'temp_password',
 } as const;
+
+/** Cấu hình Firebase — chỉ đọc từ .env (VITE_FIREBASE_*), không ghi cứng trong code. */
+export const firebaseConfig = {
+  apiKey: import.meta.env.VITE_FIREBASE_API_KEY,
+  authDomain: import.meta.env.VITE_FIREBASE_AUTH_DOMAIN,
+  projectId: import.meta.env.VITE_FIREBASE_PROJECT_ID,
+  appId: import.meta.env.VITE_FIREBASE_APP_ID,
+};
