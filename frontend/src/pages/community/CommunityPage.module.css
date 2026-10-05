@@ -1,0 +1,10 @@
+.page {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: var(--space-5);
+}
+
+.page > :not(:first-child) {
+  align-self: stretch;
+}

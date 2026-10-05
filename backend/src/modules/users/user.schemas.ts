@@ -9,19 +9,22 @@ export const passwordSchema = z
   .regex(/[A-Za-z]/, 'Mật khẩu phải có ít nhất một chữ cái')
   .regex(/\d/, 'Mật khẩu phải có ít nhất một chữ số');
 
+/** SĐT Việt Nam: 10 số bắt đầu bằng 0 (chấp nhận +84, khoảng trắng, dấu chấm). */
+export const phoneSchema = z
+  .string()
+  .transform((v) => v.replace(/[\s.()-]/g, '').replace(/^\+84/, '0'))
+  .pipe(z.string().regex(/^0\d{9}$/, 'Số điện thoại không hợp lệ'));
+
 export const createUserSchema = z
   .object({
-    username: z.string().trim().toLowerCase().min(3).max(64).regex(/^[a-z0-9._-]+$/, 'Chỉ dùng chữ thường, số, dấu . _ -'),
+    fullName: z.string().trim().min(2).max(120),
+    phone: phoneSchema.optional(),
+    email: z.email().transform((v) => v.toLowerCase()).optional(),
     password: passwordSchema,
     role: z.enum(ROLES),
-    fullName: z.string().trim().min(2).max(120),
-    email: z.email().optional(),
-    phone: z.string().trim().max(20).optional(),
+    /** Cư dân: CCCD của nhân khẩu để liên kết tài khoản. */
     citizenId: z.string().regex(/^\d{12}$/, 'Số CCCD gồm 12 chữ số').optional(),
   })
-  .refine((u) => u.role !== 'nguoi_dan' || u.citizenId, {
-    path: ['citizenId'],
-    message: 'Tài khoản người dân phải có số CCCD',
-  });
+  .refine((u) => u.phone || u.email, { path: ['phone'], message: 'Cần SĐT hoặc email để đăng nhập' });
 
 export type CreateUserInput = z.input<typeof createUserSchema>;

@@ -1,0 +1,145 @@
+.stack {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+}
+
+.desc {
+  font-size: var(--fs-sm);
+}
+
+.actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-3);
+  margin-top: var(--space-3);
+}
+
+.done {
+  font-size: var(--fs-sm);
+  color: var(--color-success);
+}
+
+/* Kết quả / câu hỏi khảo sát */
+.results {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+  margin-top: var(--space-4);
+  padding-top: var(--space-4);
+  border-top: 1px solid var(--color-border);
+}
+
+.question {
+  margin-bottom: var(--space-2);
+  font-size: var(--fs-sm);
+  font-weight: var(--fw-bold);
+  color: var(--color-heading);
+}
+
+.option {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  gap: 2px var(--space-3);
+  margin-bottom: var(--space-2);
+  font-size: var(--fs-sm);
+}
+
+.option > :last-child {
+  grid-column: 1 / -1;
+}
+
+.optionCount {
+  font-size: var(--fs-xs);
+  color: var(--color-muted);
+}
+
+.fieldset {
+  margin: 0;
+  padding: 0;
+  border: 0;
+}
+
+.radio {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  padding: var(--space-2) var(--space-3);
+  border-radius: var(--radius-md);
+  font-size: var(--fs-sm);
+  cursor: pointer;
+}
+
+.radio:hover {
+  background: var(--color-surface-muted);
+}
+
+/* Lịch sinh hoạt */
+.activities {
+  display: flex;
+  flex-direction: column;
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.activity {
+  display: flex;
+  align-items: center;
+  gap: var(--space-4);
+  padding: var(--space-3) 0;
+  border-bottom: 1px solid var(--color-border);
+}
+
+.activity:last-child {
+  border-bottom: 0;
+}
+
+.past {
+  opacity: 0.6;
+}
+
+.dateBox {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  flex-shrink: 0;
+  width: 3.25rem;
+  padding: var(--space-1) 0;
+  border-radius: var(--radius-md);
+  background: var(--color-surface-muted);
+  line-height: 1.2;
+}
+
+.dateBox strong {
+  font-size: var(--fs-lg);
+  color: var(--color-danger);
+}
+
+.dateBox span {
+  font-size: var(--fs-2xs);
+  text-transform: uppercase;
+  color: var(--color-muted);
+}
+
+.activityBody {
+  min-width: 0;
+}
+
+.activityBody h6 {
+  font-size: var(--fs-sm);
+}
+
+.activityBody p {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-1);
+  font-size: var(--fs-xs);
+}
+
+.activityBody small {
+  font-size: var(--fs-xs);
+  color: var(--color-muted);
+}

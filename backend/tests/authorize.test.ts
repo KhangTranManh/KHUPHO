@@ -19,19 +19,19 @@ const ctx = (role: AuthContext['role']): AuthContext => ({ userId: 'u', sessionI
 
 describe('authorize()', () => {
   it('cho qua khi vai trò nằm trong danh sách', () => {
-    const { next, error } = run(ctx('can_bo'), 'admin', 'can_bo');
+    const { next, error } = run(ctx('cong_an_kv'), 'truong_kp', 'cong_an_kv');
     expect(error).toBeUndefined();
     expect(next).toHaveBeenCalledOnce();
   });
 
   it('chặn 403 khi sai vai trò', () => {
-    const { next, error } = run(ctx('nguoi_dan'), 'admin', 'can_bo');
+    const { next, error } = run(ctx('cu_dan'), 'truong_kp', 'cong_an_kv');
     expect(error?.status).toBe(403);
     expect(next).not.toHaveBeenCalled();
   });
 
   it('chặn 401 khi chưa xác thực', () => {
-    const { error } = run(undefined, 'admin');
+    const { error } = run(undefined, 'truong_kp');
     expect(error?.status).toBe(401);
   });
 });

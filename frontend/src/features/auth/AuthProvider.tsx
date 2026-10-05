@@ -49,8 +49,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     channel?.close();
   };
 
-  const login = useCallback(async (username: string, password: string) => {
-    const user = await authService.login(username, password);
+  const login = useCallback(async (identifier: string, password: string) => {
+    const user = await authService.login(identifier, password);
     setState({ status: 'authenticated', user });
     return user;
   }, []);

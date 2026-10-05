@@ -21,11 +21,20 @@ const envSchema = z.object({
   LOG_LEVEL: z.enum(['fatal', 'error', 'warn', 'info', 'debug', 'trace', 'silent']).default('info'),
 
   MONGODB_URI: z.string().min(1),
+  /** Tên database của hệ thống — luôn dùng tên này, kể cả khi chuỗi kết nối không ghi tên DB. */
+  MONGODB_DB_NAME: z.string().regex(/^[A-Za-z0-9_-]{1,38}$/, "chỉ gồm chữ, số, _ và -").default("khupho"),
 
   JWT_ACCESS_SECRET: z.string().min(32, 'phải dài ít nhất 32 ký tự'),
   JWT_ACCESS_TTL_MINUTES: z.coerce.number().int().positive().default(15),
   REFRESH_TOKEN_TTL_DAYS: z.coerce.number().int().positive().default(7),
   COOKIE_SECURE: booleanString.optional(),
+
+  /** Khoá AES-256 mã hoá dữ liệu cá nhân: 32 byte, mã hoá base64. */
+  DATA_ENCRYPTION_KEY: z
+    .string()
+    .refine((v) => Buffer.from(v, 'base64').length === 32, 'phải là 32 byte mã hoá base64'),
+  /** Khoá HMAC cho blind index / token tìm kiếm — khác khoá mã hoá, ≥ 32 ký tự. */
+  DATA_INDEX_KEY: z.string().min(32, 'phải dài ít nhất 32 ký tự'),
 
   CORS_ORIGINS: z
     .string()

@@ -2,13 +2,19 @@ import { ROUTES } from '@/config/navigation';
 import type { Role } from './types';
 
 export const ROLE_LABEL: Record<Role, string> = {
-  admin: 'Quản trị viên',
-  can_bo: 'Cán bộ',
-  nguoi_dan: 'Người dân',
+  truong_kp: 'Trưởng khu phố',
+  cong_an_kv: 'Công an khu vực',
+  cu_dan: 'Cư dân',
 };
 
-/** Vai trò được vào các trang quản lý dân cư. */
-export const STAFF_ROLES: Role[] = ['admin', 'can_bo'];
+/** Cán bộ — xem dân cư, xử lý phản ánh / SOS. Khớp backend requireStaff. */
+export const STAFF_ROLES: Role[] = ['truong_kp', 'cong_an_kv'];
 
-/** Trang mặc định sau khi đăng nhập / khi vào trang không đủ quyền. */
-export const homeFor = (role: Role) => (role === 'nguoi_dan' ? ROUTES.profile : ROUTES.dashboard);
+/** Trưởng khu phố — quản lý thông báo, quỹ, cộng đồng, an sinh. Khớp backend requireLeader. */
+export const LEADER_ROLES: Role[] = ['truong_kp'];
+
+/** Thông tin & phản hồi (thông báo, sổ tay, quỹ, cộng đồng): trưởng khu phố + cư dân. */
+export const INFO_ROLES: Role[] = ['truong_kp', 'cu_dan'];
+
+/** Trang mặc định sau khi đăng nhập: mỗi vai trò có dashboard riêng tại trang chủ. */
+export const homeFor = (_role: Role) => ROUTES.dashboard;

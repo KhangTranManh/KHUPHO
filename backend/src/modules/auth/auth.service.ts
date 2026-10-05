@@ -4,6 +4,7 @@ import { logger } from '../../common/logger.js';
 import { burnPasswordCheck, verifyPassword } from '../../common/security/password.js';
 import { randomToken, sha256 } from '../../common/security/tokens.js';
 import { env } from '../../config/env.js';
+import { blindIndex } from '../../common/security/fieldEncryption.js';
 import { toPublicUser, type PublicUser } from '../users/user.mapper.js';
 import { UserModel } from '../users/user.model.js';
 import { getUserById } from '../users/user.service.js';
@@ -22,16 +23,22 @@ export interface AuthResult {
 }
 
 const DAY_MS = 86_400_000;
+
+/** Có '@' → email, ngược lại → SĐT. */
+const identifierFilter = (identifier: string) =>
+  identifier.includes('@')
+    ? { emailHash: blindIndex('email', identifier) }
+    : { phoneHash: blindIndex('phone', identifier) };
 const refreshExpiry = () => new Date(Date.now() + env.REFRESH_TOKEN_TTL_DAYS * DAY_MS);
 
 function buildResult(
-  user: Parameters<typeof toPublicUser>[0],
+  user: object & { _id: Types.ObjectId },
   sessionId: Types.ObjectId,
   refreshToken: string,
   expiresAt: Date,
 ): AuthResult {
   return {
-    user: toPublicUser(user),
+    user: toPublicUser(user as Parameters<typeof toPublicUser>[0]),
     accessToken: signAccessToken({ sub: user._id.toString(), sid: sessionId.toString() }),
     expiresIn: ACCESS_TOKEN_TTL_SECONDS,
     refreshToken,
@@ -42,9 +49,10 @@ function buildResult(
 /**
  * Đăng nhập: kiểm tra khoá tạm → mật khẩu → trạng thái tài khoản, rồi tạo phiên mới.
  * Sai mật khẩu và sai tên đăng nhập trả cùng một lỗi để không lộ tài khoản nào tồn tại.
+ * Đăng nhập bằng SĐT hoặc email — tra qua blind index vì giá trị gốc đã mã hoá.
  */
 export async function login(input: LoginInput, client: ClientInfo): Promise<AuthResult> {
-  const user = await UserModel.findOne({ username: input.username }).select(
+  const user = await UserModel.findOne(identifierFilter(input.identifier)).select(
     '+passwordHash +failedLoginCount +lockedUntil',
   );
 

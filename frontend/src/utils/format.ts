@@ -5,7 +5,18 @@ const dateFmt = new Intl.DateTimeFormat('vi-VN', {
   year: 'numeric',
 });
 
+const dateTimeFmt = new Intl.DateTimeFormat('vi-VN', {
+  day: '2-digit',
+  month: '2-digit',
+  year: 'numeric',
+  hour: '2-digit',
+  minute: '2-digit',
+});
+
 export const formatNumber = (n: number) => numberFmt.format(n);
+
+/** ISO datetime → dd/mm/yyyy hh:mm */
+export const formatDateTime = (iso: string) => dateTimeFmt.format(new Date(iso));
 
 /** ISO yyyy-mm-dd → dd/mm/yyyy */
 export const formatDate = (iso: string) => dateFmt.format(new Date(iso));

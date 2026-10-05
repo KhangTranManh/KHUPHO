@@ -84,6 +84,9 @@ export const apiGet = <T>(path: string) => request<T>(path);
 export const apiPost = <T = void>(path: string, body?: unknown) =>
   request<T>(path, { method: 'POST', body: body === undefined ? undefined : JSON.stringify(body) });
 
+export const apiPatch = <T = void>(path: string, body: unknown) =>
+  request<T>(path, { method: 'PATCH', body: JSON.stringify(body) });
+
 /** { page: 1, search: 'an', filter: undefined } → "?page=1&search=an" (bỏ giá trị rỗng). */
 export function toQueryString(params: object) {
   const qs = new URLSearchParams();

@@ -36,9 +36,7 @@ export function ProfilePage() {
 
   const info: [string, string | undefined][] = [
     ['Họ và tên', user.fullName],
-    ['Tên đăng nhập', user.username],
     ['Vai trò', ROLE_LABEL[user.role]],
-    ['Số CCCD', user.citizenId],
     ['Email', user.email],
     ['Điện thoại', user.phone],
   ];

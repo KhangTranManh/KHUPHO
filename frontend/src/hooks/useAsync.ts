@@ -1,4 +1,4 @@
-import { useEffect, useState, type DependencyList } from 'react';
+import { useCallback, useEffect, useState, type DependencyList } from 'react';
 
 interface AsyncState<T> {
   data?: T;
@@ -7,11 +7,12 @@ interface AsyncState<T> {
 }
 
 /**
- * Chạy `fn` mỗi khi `deps` đổi. Giữ `data` cũ trong lúc tải lại để bảng không nháy trắng.
- * Bỏ qua kết quả của lần gọi cũ nếu deps đã đổi trước khi nó trả về.
+ * Chạy `fn` mỗi khi `deps` đổi (hoặc khi gọi `reload()`). Giữ `data` cũ trong lúc tải lại
+ * để bảng không nháy trắng. Bỏ qua kết quả của lần gọi cũ nếu deps đã đổi trước khi nó trả về.
  */
-export function useAsync<T>(fn: () => Promise<T>, deps: DependencyList): AsyncState<T> {
+export function useAsync<T>(fn: () => Promise<T>, deps: DependencyList) {
   const [state, setState] = useState<AsyncState<T>>({ loading: true });
+  const [version, setVersion] = useState(0);
 
   useEffect(() => {
     let cancelled = false;
@@ -27,7 +28,10 @@ export function useAsync<T>(fn: () => Promise<T>, deps: DependencyList): AsyncSt
       cancelled = true;
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps -- deps do người gọi quyết định
-  }, deps);
+  }, [...deps, version]);
 
-  return state;
+  /** Tải lại với cùng tham số — dùng sau khi thêm / sửa dữ liệu. */
+  const reload = useCallback(() => setVersion((v) => v + 1), []);
+
+  return { ...state, reload };
 }

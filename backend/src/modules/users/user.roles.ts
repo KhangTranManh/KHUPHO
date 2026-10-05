@@ -1,17 +1,21 @@
 /**
  * Vai trò người dùng. Giá trị lưu trong DB và gửi cho frontend — đổi tên phải migrate dữ liệu.
- *   admin      — quản trị hệ thống: quản lý tài khoản, cấu hình
- *   can_bo     — cán bộ: quản lý nhân khẩu, hộ, tạm trú/tạm vắng tại tổ được phân công
- *   nguoi_dan  — người dân: xem thông tin cư trú của bản thân / hộ, gửi khai báo
+ *   truong_kp   — trưởng khu phố: xem và quản lý tất cả (dân cư, phản ánh, thông báo, quỹ, cộng đồng, an sinh)
+ *   cong_an_kv  — công an khu vực: xem dân cư (nhân khẩu, hộ, biến động) và xử lý phản ánh / SOS
+ *   cu_dan      — cư dân: xem thông tin, gửi phản ánh / SOS, trả lời khảo sát
  */
-export const ROLES = ['admin', 'can_bo', 'nguoi_dan'] as const;
+export const ROLES = ['truong_kp', 'cong_an_kv', 'cu_dan'] as const;
 export type Role = (typeof ROLES)[number];
 
 export const ROLE_LABEL: Record<Role, string> = {
-  admin: 'Quản trị viên',
-  can_bo: 'Cán bộ',
-  nguoi_dan: 'Người dân',
+  truong_kp: 'Trưởng khu phố',
+  cong_an_kv: 'Công an khu vực',
+  cu_dan: 'Cư dân',
 };
+
+/** Cán bộ (xem dân cư, xử lý phản ánh) — khớp guards.requireStaff. */
+export const STAFF_ROLES: Role[] = ['truong_kp', 'cong_an_kv'];
+export const isStaffRole = (role: Role) => STAFF_ROLES.includes(role);
 
 export const USER_STATUSES = ['active', 'disabled'] as const;
 export type UserStatus = (typeof USER_STATUSES)[number];

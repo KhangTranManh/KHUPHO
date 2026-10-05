@@ -11,13 +11,13 @@ import type { SignInLocationState } from '@/features/auth/RequireAuth';
 import { ApiError } from '@/services/api';
 import styles from './SignInPage.module.css';
 
-/** Đăng nhập chung cho admin, cán bộ và người dân (người dân dùng số CCCD). */
+/** Đăng nhập chung cho mọi vai trò bằng SĐT hoặc email. */
 export function SignInPage() {
   const { state, user, login } = useAuth();
   const navigate = useNavigate();
   const from = (useLocation().state as SignInLocationState | null)?.from;
 
-  const [username, setUsername] = useState('');
+  const [identifier, setIdentifier] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
@@ -43,7 +43,7 @@ export function SignInPage() {
     setError(null);
     setSubmitting(true);
     try {
-      const me = await login(username, password);
+      const me = await login(identifier, password);
       navigate(from ?? homeFor(me.role), { replace: true });
     } catch (err) {
       setError(err instanceof ApiError ? err.message : 'Đăng nhập không thành công, vui lòng thử lại');
@@ -64,7 +64,7 @@ export function SignInPage() {
         <div className={styles.formWrap}>
           <h3 className={`tone-primary text-gradient ${styles.title}`}>Chào mừng trở lại</h3>
           <p className={styles.lead}>
-            Cán bộ đăng nhập bằng tài khoản được cấp. Người dân đăng nhập bằng số CCCD.
+            Đăng nhập bằng số điện thoại hoặc email đã đăng ký với khu phố.
           </p>
 
           {demoAccounts.data && demoAccounts.data.length > 0 && (
@@ -73,18 +73,18 @@ export function SignInPage() {
               <div className={styles.demoList}>
                 {demoAccounts.data.map((a) => (
                   <button
-                    key={a.username}
+                    key={a.login}
                     type="button"
                     className={styles.demoItem}
                     onClick={() => {
-                      setUsername(a.username);
+                      setIdentifier(a.login);
                       setPassword(a.password);
                       setError(null);
                     }}
                   >
                     <strong>{ROLE_LABEL[a.role]}</strong>
                     <span>
-                      {a.username} / {a.password}
+                      {a.login} / {a.password}
                     </span>
                   </button>
                 ))}
@@ -101,12 +101,12 @@ export function SignInPage() {
 
           <form className={styles.form} onSubmit={onSubmit}>
             <TextField
-              label="Tên đăng nhập / Số CCCD"
+              label="Số điện thoại hoặc email"
               icon="user"
-              placeholder="VD: canbo01 hoặc 001099012345"
+              placeholder="VD: 0901234567 hoặc ten@email.com"
               autoComplete="username"
-              value={username}
-              onChange={(e) => setUsername(e.target.value)}
+              value={identifier}
+              onChange={(e) => setIdentifier(e.target.value)}
               required
               autoFocus
             />

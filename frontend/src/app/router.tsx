@@ -1,7 +1,8 @@
+import type { ComponentType } from 'react';
 import { createBrowserRouter } from 'react-router-dom';
 import { DashboardLayout } from '@/components/layout/DashboardLayout';
 import { ROUTES } from '@/config/navigation';
-import { STAFF_ROLES } from '@/features/auth/constants';
+import { INFO_ROLES, LEADER_ROLES, STAFF_ROLES } from '@/features/auth/constants';
 import { RequireAuth, RequireRole } from '@/features/auth/RequireAuth';
 import { DashboardPage } from '@/pages/dashboard/DashboardPage';
 import { NotFoundPage } from '@/pages/NotFoundPage';
@@ -9,10 +10,19 @@ import { NotFoundPage } from '@/pages/NotFoundPage';
 /** Đường dẫn con (bỏ dấu "/" đầu) để lồng trong layout. */
 const child = (path: string) => path.replace(/^\//, '');
 
+/** Route tải trang khi mở (tách chunk). `pick` chọn component trong module. */
+const lazyRoute = <M,>(path: string, load: () => Promise<M>, pick: (m: M) => ComponentType) => ({
+  path: child(path),
+  lazy: () => load().then((m) => ({ Component: pick(m) })),
+});
+
 /*
- * Trang tổng quan tải sẵn; các trang khác tách chunk, chỉ tải khi mở.
- * Thêm trang: ROUTES (config/navigation.ts) → thêm route ở đây (đặt dưới RequireRole phù hợp)
- * → thêm mục sidebarNav kèm `roles`.
+ * Quyền theo vai trò (khớp backend guards):
+ *   Mọi vai trò          tổng quan (dashboard riêng từng vai trò), phản ánh, SOS, hồ sơ
+ *   Trưởng KP + công an  nhân khẩu, hộ, biến động
+ *   Trưởng KP + cư dân   thông báo, sổ tay, quỹ, cộng đồng
+ *   Chỉ trưởng KP        hộ chính sách
+ * Thêm trang: ROUTES → route ở đây (đặt dưới RequireRole phù hợp) → mục sidebarNav kèm `roles`.
  */
 export const router = createBrowserRouter([
   {
@@ -27,33 +37,30 @@ export const router = createBrowserRouter([
       </RequireAuth>
     ),
     children: [
-      // Quản lý dân cư: chỉ admin + cán bộ.
+      { index: true, element: <DashboardPage /> },
+      lazyRoute(ROUTES.security, () => import('@/pages/security/SecurityPage'), (m) => m.SecurityPage),
+      lazyRoute(ROUTES.sos, () => import('@/pages/sos/SosPage'), (m) => m.SosPage),
+      lazyRoute(ROUTES.profile, () => import('@/pages/profile/ProfilePage'), (m) => m.ProfilePage),
       {
         element: <RequireRole roles={STAFF_ROLES} />,
         children: [
-          { index: true, element: <DashboardPage /> },
-          {
-            path: child(ROUTES.residents),
-            lazy: () => import('@/pages/residents/ResidentsPage').then((m) => ({ Component: m.ResidentsPage })),
-          },
-          {
-            path: child(ROUTES.households),
-            lazy: () => import('@/pages/households/HouseholdsPage').then((m) => ({ Component: m.HouseholdsPage })),
-          },
-          {
-            path: child(ROUTES.temporary),
-            lazy: () => import('@/pages/temporary/TemporaryPage').then((m) => ({ Component: m.TemporaryPage })),
-          },
-          {
-            path: child(ROUTES.changes),
-            lazy: () => import('@/pages/changes/ChangesPage').then((m) => ({ Component: m.ChangesPage })),
-          },
+          lazyRoute(ROUTES.residents, () => import('@/pages/residents/ResidentsPage'), (m) => m.ResidentsPage),
+          lazyRoute(ROUTES.households, () => import('@/pages/households/HouseholdsPage'), (m) => m.HouseholdsPage),
+          lazyRoute(ROUTES.changes, () => import('@/pages/changes/ChangesPage'), (m) => m.ChangesPage),
         ],
       },
-      // Mọi vai trò.
       {
-        path: child(ROUTES.profile),
-        lazy: () => import('@/pages/profile/ProfilePage').then((m) => ({ Component: m.ProfilePage })),
+        element: <RequireRole roles={INFO_ROLES} />,
+        children: [
+          lazyRoute(ROUTES.posts, () => import('@/pages/posts/PostsPage'), (m) => m.PostsPage),
+          lazyRoute(ROUTES.directory, () => import('@/pages/directory/DirectoryPage'), (m) => m.DirectoryPage),
+          lazyRoute(ROUTES.funds, () => import('@/pages/funds/FundsPage'), (m) => m.FundsPage),
+          lazyRoute(ROUTES.community, () => import('@/pages/community/CommunityPage'), (m) => m.CommunityPage),
+        ],
+      },
+      {
+        element: <RequireRole roles={LEADER_ROLES} />,
+        children: [lazyRoute(ROUTES.welfare, () => import('@/pages/welfare/WelfarePage'), (m) => m.WelfarePage)],
       },
       { path: '*', element: <NotFoundPage /> },
     ],

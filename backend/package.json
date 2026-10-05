@@ -13,8 +13,10 @@
     "typecheck": "tsc --noEmit",
     "test": "vitest run",
     "test:watch": "vitest",
-    "seed:users": "tsx scripts/seed-users.ts",
-    "db:sync-indexes": "tsx scripts/sync-indexes.ts"
+    "db:setup": "tsx scripts/db/setup.ts",
+    "db:status": "tsx scripts/db/status.ts",
+    "db:sync-indexes": "tsx scripts/db/sync-indexes.ts",
+    "db:reset": "tsx scripts/db/reset.ts"
   },
   "dependencies": {
     "bcryptjs": "^3.0.3",

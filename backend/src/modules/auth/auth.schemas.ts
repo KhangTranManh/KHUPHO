@@ -1,17 +1,15 @@
 import { z } from 'zod';
 
 /**
- * Đăng nhập chung cho cả 3 vai trò.
- * Admin / cán bộ: tên đăng nhập được cấp. Người dân: số CCCD.
+ * Đăng nhập chung cho mọi vai trò bằng SĐT hoặc email.
  * Không kiểm tra độ mạnh mật khẩu ở đây (đó là việc khi tạo / đổi mật khẩu).
  */
 export const loginSchema = z.object({
-  username: z
-    .string({ error: 'Vui lòng nhập tên đăng nhập' })
+  identifier: z
+    .string({ error: 'Vui lòng nhập số điện thoại hoặc email' })
     .trim()
-    .toLowerCase()
-    .min(1, 'Vui lòng nhập tên đăng nhập')
-    .max(64, 'Tên đăng nhập quá dài'),
+    .min(1, 'Vui lòng nhập số điện thoại hoặc email')
+    .max(254, 'Quá dài'),
   password: z
     .string({ error: 'Vui lòng nhập mật khẩu' })
     .min(1, 'Vui lòng nhập mật khẩu')

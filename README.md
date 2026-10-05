@@ -48,7 +48,9 @@ WEBKHUPHO/
   Danh sách nhận query `?search=&filter=&page=&pageSize=` và trả `{ items, total, page, pageSize }`.
 - **Đăng nhập:** `features/auth/` (AuthProvider, RequireAuth / RequireRole) luôn gọi backend thật, kể cả khi bật mock.
   Access token chỉ giữ trong bộ nhớ; tải lại trang thì khôi phục bằng refresh cookie.
-  Menu và route lọc theo vai trò: `admin`, `can_bo` vào trang quản lý; `nguoi_dan` hiện chỉ có `/ho-so`.
+  Menu và route lọc theo vai trò — mỗi vai trò một dashboard ở trang chủ:
+  `truong_kp` thấy tất cả; `cong_an_kv` thấy dân cư + phản ánh / SOS;
+  `cu_dan` thấy thông báo, sổ tay, quỹ, cộng đồng, phản ánh / SOS, hồ sơ.
 - **Thêm trang mới:** thêm đường dẫn vào `ROUTES` → route trong `app/router.tsx` → mục trong `sidebarNav`.
   Trang danh sách: dùng `useListQuery` + `ListToolbar` + `ListView`, chỉ cần khai báo cột.
 

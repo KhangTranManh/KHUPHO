@@ -17,11 +17,11 @@ interface LoginResponse {
   user: AuthUser;
 }
 
-/** Admin / cán bộ: tên đăng nhập. Người dân: số CCCD. */
-export async function login(username: string, password: string): Promise<AuthUser> {
-  if (appConfig.demoAuth) return (await loadDemo()).login(username, password);
+/** Đăng nhập bằng SĐT hoặc email. */
+export async function login(identifier: string, password: string): Promise<AuthUser> {
+  if (appConfig.demoAuth) return (await loadDemo()).login(identifier, password);
 
-  const data = await apiPost<LoginResponse>('/auth/login', { username, password });
+  const data = await apiPost<LoginResponse>('/auth/login', { identifier, password });
   setAccessToken(data.accessToken);
   return data.user;
 }

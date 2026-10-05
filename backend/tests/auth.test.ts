@@ -5,7 +5,7 @@ import { SessionModel } from '../src/modules/auth/session.model.js';
 import { UserModel } from '../src/modules/users/user.model.js';
 import { ROLES, type Role } from '../src/modules/users/user.roles.js';
 import { clearTestDb, startTestDb, stopTestDb } from './helpers/db.js';
-import { createTestUser, TEST_PASSWORD, TEST_USERS } from './helpers/users.js';
+import { createTestUser, loginBody, TEST_PASSWORD, TEST_USERS } from './helpers/users.js';
 
 const app = createApp();
 
@@ -24,7 +24,7 @@ async function loginAs(role: Role) {
   await createTestUser(role);
   const res = await request(app)
     .post('/api/auth/login')
-    .send({ username: TEST_USERS[role].username, password: TEST_PASSWORD });
+    .send(loginBody(role));
   expect(res.status).toBe(200);
   return { token: res.body.accessToken as string, cookie: cookiePair(refreshCookie(res)), body: res.body };
 }
@@ -36,15 +36,15 @@ describe('POST /api/auth/login', () => {
     expect(body.tokenType).toBe('Bearer');
     expect(body.accessToken).toEqual(expect.any(String));
     expect(body.expiresIn).toBeGreaterThan(0);
-    expect(body.user).toMatchObject({ role, username: TEST_USERS[role].username });
+    expect(body.user).toMatchObject({ role, fullName: TEST_USERS[role].fullName });
     expect(body.user).not.toHaveProperty('passwordHash');
     expect(body).not.toHaveProperty('refreshToken');
     expect(cookie).toMatch(/^wkp_rt=.+/);
   });
 
   it('đặt refresh cookie httpOnly, SameSite=Strict, chỉ cho /api/auth', async () => {
-    await createTestUser('admin');
-    const res = await request(app).post('/api/auth/login').send({ username: 'admin', password: TEST_PASSWORD });
+    await createTestUser('truong_kp');
+    const res = await request(app).post('/api/auth/login').send(loginBody('truong_kp'));
     const setCookie = refreshCookie(res)!;
 
     expect(setCookie).toMatch(/HttpOnly/i);
@@ -52,16 +52,18 @@ describe('POST /api/auth/login', () => {
     expect(setCookie).toMatch(/Path=\/api\/auth/);
   });
 
-  it('không phân biệt hoa thường / khoảng trắng ở tên đăng nhập', async () => {
-    await createTestUser('can_bo');
-    const res = await request(app).post('/api/auth/login').send({ username: '  CanBo01 ', password: TEST_PASSWORD });
-    expect(res.status).toBe(200);
+  it('đăng nhập bằng SĐT có khoảng trắng / +84, hoặc email viết hoa', async () => {
+    await createTestUser('truong_kp');
+    const login = (identifier: string) => request(app).post('/api/auth/login').send({ identifier, password: TEST_PASSWORD });
+    expect((await login(' 0900 000 002 ')).status).toBe(200);
+    expect((await login('+84900000002')).status).toBe(200);
+    expect((await login('TRUONGKP@Khupho.local')).status).toBe(200);
   });
 
   it('sai mật khẩu và sai tên đăng nhập trả cùng một lỗi', async () => {
-    await createTestUser('admin');
-    const wrongPass = await request(app).post('/api/auth/login').send({ username: 'admin', password: 'sai' });
-    const noUser = await request(app).post('/api/auth/login').send({ username: 'khongco', password: 'sai' });
+    await createTestUser('truong_kp');
+    const wrongPass = await request(app).post('/api/auth/login').send({ identifier: 'truongkp@khupho.local', password: 'sai' });
+    const noUser = await request(app).post('/api/auth/login').send({ identifier: '0999999999', password: 'sai' });
 
     expect(wrongPass.status).toBe(401);
     expect(noUser.status).toBe(401);
@@ -70,12 +72,12 @@ describe('POST /api/auth/login', () => {
   });
 
   it('trả lỗi VALIDATION_ERROR khi thiếu trường', async () => {
-    const res = await request(app).post('/api/auth/login').send({ username: '' });
+    const res = await request(app).post('/api/auth/login').send({ identifier: '' });
 
     expect(res.status).toBe(400);
     expect(res.body.error.code).toBe('VALIDATION_ERROR');
     expect(res.body.error.details.map((d: { field: string }) => d.field)).toEqual(
-      expect.arrayContaining(['username', 'password']),
+      expect.arrayContaining(['identifier', 'password']),
     );
   });
 
@@ -86,9 +88,9 @@ describe('POST /api/auth/login', () => {
   });
 
   it('khoá tạm tài khoản sau số lần sai tối đa (3 trong test), kể cả khi sau đó nhập đúng', async () => {
-    await createTestUser('can_bo');
+    await createTestUser('truong_kp');
     const attempt = (password: string) =>
-      request(app).post('/api/auth/login').send({ username: 'canbo01', password });
+      request(app).post('/api/auth/login').send({ identifier: '0900000002', password });
 
     expect((await attempt('sai1')).status).toBe(401);
     expect((await attempt('sai2')).status).toBe(401);
@@ -100,9 +102,9 @@ describe('POST /api/auth/login', () => {
   });
 
   it('đăng nhập đúng sẽ reset bộ đếm sai', async () => {
-    await createTestUser('can_bo');
+    await createTestUser('truong_kp');
     const attempt = (password: string) =>
-      request(app).post('/api/auth/login').send({ username: 'canbo01', password });
+      request(app).post('/api/auth/login').send({ identifier: '0900000002', password });
 
     await attempt('sai1');
     await attempt('sai2');
@@ -111,12 +113,12 @@ describe('POST /api/auth/login', () => {
   });
 
   it('từ chối tài khoản bị vô hiệu hoá', async () => {
-    await createTestUser('nguoi_dan');
-    await UserModel.updateOne({ username: TEST_USERS.nguoi_dan.username }, { status: 'disabled' });
+    await createTestUser('cu_dan');
+    await UserModel.updateOne({ role: 'cu_dan' }, { status: 'disabled' });
 
     const res = await request(app)
       .post('/api/auth/login')
-      .send({ username: TEST_USERS.nguoi_dan.username, password: TEST_PASSWORD });
+      .send(loginBody('cu_dan'));
     expect(res.status).toBe(403);
     expect(res.body.error.code).toBe('ACCOUNT_DISABLED');
   });
@@ -124,11 +126,11 @@ describe('POST /api/auth/login', () => {
 
 describe('GET /api/auth/me', () => {
   it('trả thông tin người đang đăng nhập', async () => {
-    const { token } = await loginAs('can_bo');
+    const { token } = await loginAs('truong_kp');
     const res = await request(app).get('/api/auth/me').set('Authorization', `Bearer ${token}`);
 
     expect(res.status).toBe(200);
-    expect(res.body.user).toMatchObject({ username: 'canbo01', role: 'can_bo' });
+    expect(res.body.user).toMatchObject({ phone: '0900000002', role: 'truong_kp' });
   });
 
   it.each([
@@ -143,8 +145,8 @@ describe('GET /api/auth/me', () => {
   });
 
   it('trả 401 ngay khi tài khoản bị vô hiệu hoá sau khi đăng nhập', async () => {
-    const { token } = await loginAs('admin');
-    await UserModel.updateOne({ username: 'admin' }, { status: 'disabled' });
+    const { token } = await loginAs('truong_kp');
+    await UserModel.updateOne({ role: 'truong_kp' }, { status: 'disabled' });
 
     const res = await request(app).get('/api/auth/me').set('Authorization', `Bearer ${token}`);
     expect(res.status).toBe(401);
@@ -153,7 +155,7 @@ describe('GET /api/auth/me', () => {
 
 describe('POST /api/auth/refresh', () => {
   it('cấp access token mới và xoay vòng refresh token', async () => {
-    const { cookie } = await loginAs('nguoi_dan');
+    const { cookie } = await loginAs('cu_dan');
     const res = await request(app).post('/api/auth/refresh').set('Cookie', cookie);
 
     expect(res.status).toBe(200);
@@ -172,7 +174,7 @@ describe('POST /api/auth/refresh', () => {
   });
 
   it('dùng lại refresh token cũ → thu hồi cả phiên', async () => {
-    const { cookie: first } = await loginAs('can_bo');
+    const { cookie: first } = await loginAs('truong_kp');
     const rotated = await request(app).post('/api/auth/refresh').set('Cookie', first);
     const second = cookiePair(refreshCookie(rotated));
 
@@ -191,7 +193,7 @@ describe('POST /api/auth/refresh', () => {
 
 describe('POST /api/auth/logout', () => {
   it('thu hồi phiên: access token và refresh token đều hết hiệu lực ngay', async () => {
-    const { token, cookie } = await loginAs('admin');
+    const { token, cookie } = await loginAs('truong_kp');
 
     const res = await request(app)
       .post('/api/auth/logout')
@@ -205,7 +207,7 @@ describe('POST /api/auth/logout', () => {
   });
 
   it('đăng xuất được chỉ với cookie (khi access token đã hết hạn)', async () => {
-    const { token, cookie } = await loginAs('nguoi_dan');
+    const { token, cookie } = await loginAs('cu_dan');
 
     expect((await request(app).post('/api/auth/logout').set('Cookie', cookie)).status).toBe(204);
     expect((await request(app).get('/api/auth/me').set('Authorization', `Bearer ${token}`)).status).toBe(401);
@@ -216,8 +218,8 @@ describe('POST /api/auth/logout', () => {
   });
 
   it('logout-all đăng xuất mọi thiết bị', async () => {
-    const deviceA = await loginAs('can_bo');
-    const loginB = await request(app).post('/api/auth/login').send({ username: 'canbo01', password: TEST_PASSWORD });
+    const deviceA = await loginAs('truong_kp');
+    const loginB = await request(app).post('/api/auth/login').send(loginBody('truong_kp'));
     const tokenB = loginB.body.accessToken as string;
 
     const res = await request(app).post('/api/auth/logout-all').set('Authorization', `Bearer ${deviceA.token}`);

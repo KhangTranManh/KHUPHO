@@ -1,10 +1,10 @@
 import { appConfig } from '@/config/app';
 import { apiGet, toQueryString } from '@/services/api';
 import type { ListQuery, Paged } from '@/types/common';
-import type { Household, ResidentialGroup } from './types';
+import type { Area, Household, HousingType } from './types';
 
-/** `filter` = id tổ dân phố. */
-export type HouseholdQuery = ListQuery<string>;
+/** `filter` = loại nhà ở (thấp tầng / cao tầng). */
+export type HouseholdQuery = ListQuery<HousingType>;
 
 export async function getHouseholds(query: HouseholdQuery): Promise<Paged<Household>> {
   if (appConfig.useMock) {
@@ -14,10 +14,10 @@ export async function getHouseholds(query: HouseholdQuery): Promise<Paged<Househ
   return apiGet(`/households${toQueryString(query)}`);
 }
 
-export async function getGroups(): Promise<ResidentialGroup[]> {
+export async function getAreas(): Promise<Area[]> {
   if (appConfig.useMock) {
     const { mockApi } = await import('@/mocks/mockApi');
-    return mockApi.groups();
+    return mockApi.areas();
   }
-  return apiGet('/groups');
+  return apiGet('/areas');
 }

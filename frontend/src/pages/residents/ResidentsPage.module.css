@@ -1,0 +1,40 @@
+.phone {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-1);
+  white-space: nowrap;
+}
+
+.tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-1);
+  max-width: 14rem;
+}
+
+/* Nhãn nhóm đối tượng: nền nhạt, chữ theo tông — nhẹ hơn Badge để nhiều nhãn không rối mắt. */
+.tag {
+  padding: 0.15rem 0.5rem;
+  border-radius: var(--radius-pill);
+  border: 1px solid var(--tone-solid);
+  color: var(--tone-solid);
+  font-size: var(--fs-2xs);
+  font-weight: var(--fw-bold);
+  white-space: nowrap;
+}
+
+/* Bộ lọc nhóm đang áp dụng (bấm để bỏ) */
+.chip {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-1);
+  padding: 0.3rem 0.7rem;
+  border: 0;
+  border-radius: var(--radius-pill);
+  background-image: var(--tone-gradient);
+  color: var(--color-on-gradient);
+  font-size: var(--fs-xs);
+  font-weight: var(--fw-bold);
+  cursor: pointer;
+  white-space: nowrap;
+}

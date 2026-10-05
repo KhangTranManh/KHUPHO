@@ -5,7 +5,7 @@ export interface AuthContextValue {
   state: AuthState;
   /** Người đang đăng nhập, null nếu chưa. */
   user: AuthUser | null;
-  login: (username: string, password: string) => Promise<AuthUser>;
+  login: (identifier: string, password: string) => Promise<AuthUser>;
   logout: () => Promise<void>;
   logoutAll: () => Promise<void>;
 }

@@ -4,8 +4,8 @@ import { Errors } from '../errors/AppError.js';
 
 /**
  * Chỉ cho các vai trò được liệt kê. Đặt sau `authenticate`.
- *   router.get('/users', authenticate, authorize('admin'), ...)
- *   router.get('/residents', authenticate, authorize('admin', 'can_bo'), ...)
+ *   router.get('/users', authenticate, authorize('truong_kp'), ...)
+ *   router.get('/residents', authenticate, authorize('truong_kp', 'cong_an_kv'), ...)
  */
 export const authorize =
   (...allowed: Role[]): RequestHandler =>

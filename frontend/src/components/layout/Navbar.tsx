@@ -70,10 +70,12 @@ export function Navbar({ onMenuClick }: NavbarProps) {
             {user && <small className={styles.role}> · {ROLE_LABEL[user.role]}</small>}
           </span>
         </Link>
-        <button type="button" className={styles.action} aria-label="Thông báo">
+        <Link to={ROUTES.posts} className={styles.action} aria-label="Thông báo">
           <Icon name="bell" size={16} />
-          <span className={styles.dot} />
-        </button>
+        </Link>
+        <Link to={ROUTES.sos} className={styles.sos} aria-label="SOS khẩn cấp">
+          <Icon name="siren" size={14} /> SOS
+        </Link>
         <button type="button" className={`${styles.action} ${styles.menu}`} onClick={onMenuClick} aria-label="Mở menu">
           <Icon name="menu" size={18} />
         </button>

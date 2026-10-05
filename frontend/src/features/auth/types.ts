@@ -2,16 +2,17 @@
  * Vai trò và người dùng đăng nhập.
  * Giữ đồng bộ với backend/src/modules/users/user.roles.ts và user.mapper.ts (PublicUser).
  */
-export type Role = 'admin' | 'can_bo' | 'nguoi_dan';
+export type Role = 'truong_kp' | 'cong_an_kv' | 'cu_dan';
 
 export interface AuthUser {
   id: string;
-  username: string;
   role: Role;
   fullName: string;
-  email?: string;
   phone?: string;
-  citizenId?: string;
+  email?: string;
+  /** Hộ của cư dân (nếu tài khoản liên kết nhân khẩu). */
+  householdId?: string;
+  memberId?: string;
   lastLoginAt?: string;
 }
 

@@ -6,17 +6,11 @@
 import type { AuthUser } from '@/features/auth/types';
 import { ApiError } from '@/services/api';
 
-export const DEMO_ACCOUNTS: (AuthUser & { password: string })[] = [
-  { id: 'demo-admin', username: 'admin', password: 'Admin@2026', role: 'admin', fullName: 'Quản trị hệ thống' },
-  { id: 'demo-officer', username: 'canbo01', password: 'Canbo@2026', role: 'can_bo', fullName: 'Trần Quốc Huy' },
-  {
-    id: 'demo-citizen',
-    username: '001099012345',
-    password: 'Dan@2026',
-    role: 'nguoi_dan',
-    fullName: 'Nguyễn Văn An',
-    citizenId: '001099012345',
-  },
+/** `login` = SĐT hoặc email dùng để đăng nhập. Cư dân liên kết hộ HK-1001 trong dữ liệu mẫu. */
+export const DEMO_ACCOUNTS: (AuthUser & { login: string; password: string })[] = [
+  { id: 'demo-truongkp', login: '0900000002', password: 'TruongKP@2026', role: 'truong_kp', fullName: 'Lê Văn Tổ', phone: '0900000002' },
+  { id: 'demo-congan', login: '0900000003', password: 'CongAn@2026', role: 'cong_an_kv', fullName: 'Trần Quốc Huy', phone: '0900000003' },
+  { id: 'demo-cudan', login: '0900000004', password: 'CuDan@2026', role: 'cu_dan', fullName: 'Nguyễn Văn An', phone: '0900000004', householdId: 'h1' },
 ];
 
 const STORAGE_KEY = 'wkp-demo-session';
@@ -24,7 +18,11 @@ const LATENCY_MS = 300;
 
 const wait = () => new Promise((r) => setTimeout(r, LATENCY_MS));
 
-function toUser({ password: _password, ...user }: (typeof DEMO_ACCOUNTS)[number]): AuthUser {
+/** Chuẩn hoá giống backend: SĐT bỏ khoảng trắng, +84 → 0; email chữ thường. */
+const normalizeLogin = (v: string) =>
+  v.includes('@') ? v.trim().toLowerCase() : v.replace(/[\s.()-]/g, '').replace(/^\+84/, '0');
+
+function toUser({ password: _password, login: _login, ...user }: (typeof DEMO_ACCOUNTS)[number]): AuthUser {
   return { ...user, lastLoginAt: new Date().toISOString() };
 }
 
@@ -37,12 +35,20 @@ function save(user: AuthUser | null) {
   }
 }
 
+/** Người đang đăng nhập ở chế độ demo (đọc đồng bộ), null nếu chưa. */
+export function currentDemoUser(): AuthUser | null {
+  try {
+    const raw = sessionStorage.getItem(STORAGE_KEY);
+    return raw ? (JSON.parse(raw) as AuthUser) : null;
+  } catch {
+    return null;
+  }
+}
+
 export const demoAuth = {
-  async login(username: string, password: string): Promise<AuthUser> {
+  async login(identifier: string, password: string): Promise<AuthUser> {
     await wait();
-    const account = DEMO_ACCOUNTS.find(
-      (a) => a.username === username.trim().toLowerCase() && a.password === password,
-    );
+    const account = DEMO_ACCOUNTS.find((a) => a.login === normalizeLogin(identifier) && a.password === password);
     if (!account) {
       throw new ApiError(401, 'INVALID_CREDENTIALS', 'Tên đăng nhập hoặc mật khẩu không đúng');
     }
@@ -52,12 +58,7 @@ export const demoAuth = {
   },
 
   async restoreSession(): Promise<AuthUser | null> {
-    try {
-      const raw = sessionStorage.getItem(STORAGE_KEY);
-      return raw ? (JSON.parse(raw) as AuthUser) : null;
-    } catch {
-      return null;
-    }
+    return currentDemoUser();
   },
 
   async logout() {
