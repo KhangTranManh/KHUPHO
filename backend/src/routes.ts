@@ -1,4 +1,5 @@
 import { Router } from 'express';
+import { accountsRouter } from './modules/accounts/account.routes.js';
 import { areasRouter } from './modules/areas/area.routes.js';
 import { authRouter } from './modules/auth/auth.routes.js';
 import { changesRouter } from './modules/changes/change.routes.js';
@@ -23,6 +24,7 @@ export function buildApiRouter() {
   const api = Router();
   api.use('/health', healthRouter);
   api.use('/auth', authRouter);
+  api.use('/accounts', accountsRouter);
   api.use('/dashboard', dashboardRouter);
   api.use('/notifications', notificationsRouter);
 

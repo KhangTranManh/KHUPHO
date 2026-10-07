@@ -90,6 +90,10 @@ Tên / SĐT người gửi luôn lấy từ tài khoản, không nhận từ bod
 | | `POST /api/posts` | Trưởng KP | Thông báo nhanh / tuyên truyền / sự kiện, đính kèm, đối tượng nhận |
 | | `POST /api/posts/:id/read` | Đăng nhập | Đánh dấu đã đọc |
 | | `GET /api/directory`, `POST` | Đăng nhập / Trưởng KP | Sổ tay phường |
+| **Quản lý tài khoản** | `GET /api/accounts/lookup?phone=` | Trưởng KP | Tài khoản đăng nhập của SĐT + mọi nhân khẩu ghi SĐT đó (giải mã) |
+| | `POST /api/accounts` | Trưởng KP | Tạo tài khoản chưa kích hoạt `{ phone, fullName, role, householdCode? }`; cư dân tự liên kết nhân khẩu cùng SĐT |
+| | `PATCH /api/accounts/:id` | Trưởng KP | Sửa `fullName`, `phone`, `role`, `status`, `resetPassword`, `householdCode`. Đổi SĐT / vai trò / khoá / đặt lại mật khẩu → thu hồi mọi phiên. Không tự khoá / hạ quyền chính mình, không bỏ Trưởng KP cuối cùng |
+| | `PATCH /api/accounts/members/:householdId/:memberId` | Trưởng KP | Sửa nhân khẩu (họ tên, SĐT, CCCD, ngày sinh, giới tính, quan hệ, nhóm, cư trú). Chuỗi rỗng = xoá. Đổi cư trú → thêm lịch sử + nhật ký biến động |
 | **5. Thu quỹ** | `GET /api/funds` | Đăng nhập | Quỹ đang mở + số hộ đã đóng, tổng tiền |
 | | `GET /api/funds/:id/households` | Trưởng KP | `filter`: `da_dong` / `chua_dong`; kèm số tiền phải đóng |
 | | `POST /api/funds/:id/payments` | Trưởng KP | Đánh dấu đã đóng → lưu khoản đóng → gửi thông báo đến hộ |

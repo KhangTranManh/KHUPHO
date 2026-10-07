@@ -1,6 +1,6 @@
 import { Schema, model, type HydratedDocument, type InferSchemaType } from 'mongoose';
 
-export const SESSION_REVOKE_REASONS = ['logout', 'logout_all', 'token_reuse', 'user_disabled', 'password_changed', 'session_limit'] as const;
+export const SESSION_REVOKE_REASONS = ['logout', 'logout_all', 'token_reuse', 'user_disabled', 'password_changed', 'session_limit', 'account_updated'] as const;
 
 /**
  * Collection `sessions` — mỗi lần đăng nhập trên một thiết bị là một phiên.

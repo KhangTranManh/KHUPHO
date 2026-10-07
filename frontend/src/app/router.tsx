@@ -21,7 +21,7 @@ const lazyRoute = <M,>(path: string, load: () => Promise<M>, pick: (m: M) => Com
  *   Mọi vai trò          tổng quan (dashboard riêng từng vai trò), phản ánh, SOS, hồ sơ
  *   Trưởng KP + công an  nhân khẩu, hộ, biến động
  *   Trưởng KP + cư dân   thông báo, sổ tay, quỹ, cộng đồng
- *   Chỉ trưởng KP        hộ chính sách
+ *   Chỉ trưởng KP        hộ chính sách, quản lý tài khoản (tra cứu + sửa theo SĐT)
  * Thêm trang: ROUTES → route ở đây (đặt dưới RequireRole phù hợp) → mục sidebarNav kèm `roles`.
  */
 export const router = createBrowserRouter([
@@ -65,7 +65,10 @@ export const router = createBrowserRouter([
       },
       {
         element: <RequireRole roles={LEADER_ROLES} />,
-        children: [lazyRoute(ROUTES.welfare, () => import('@/pages/welfare/WelfarePage'), (m) => m.WelfarePage)],
+        children: [
+          lazyRoute(ROUTES.welfare, () => import('@/pages/welfare/WelfarePage'), (m) => m.WelfarePage),
+          lazyRoute(ROUTES.accounts, () => import('@/pages/accounts/AccountsPage'), (m) => m.AccountsPage),
+        ],
       },
       { path: '*', element: <NotFoundPage /> },
     ],

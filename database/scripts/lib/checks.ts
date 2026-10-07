@@ -27,8 +27,12 @@ async function schemaValidity(): Promise<Check> {
   const issues: string[] = [];
   for (const model of Object.values(mongoose.models)) {
     for await (const doc of model.find().cursor()) {
-      const err = doc.validateSync();
-      if (err) issues.push(`${model.collection.collectionName} ${doc._id}: ${Object.keys(err.errors).join(', ')}`);
+      try {
+        await doc.validate();
+      } catch (err) {
+        const fields = Object.keys((err as { errors?: object }).errors ?? {}).join(', ');
+        issues.push(`${model.collection.collectionName} ${doc._id}: ${fields || (err as Error).message}`);
+      }
     }
   }
   return { title: 'Dữ liệu khớp schema', level: 'error', issues };

@@ -1,0 +1,124 @@
+.page {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-5);
+}
+
+/* Ô tra cứu */
+.search {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  gap: var(--space-3);
+}
+
+.search > :first-child {
+  flex: 1 1 16rem;
+  max-width: 24rem;
+}
+
+/* Form */
+.form {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+}
+
+.grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(15rem, 1fr));
+  gap: var(--space-4);
+}
+
+.actions {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  gap: var(--space-2);
+}
+
+.badges {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-2);
+}
+
+.muted {
+  font-size: var(--fs-xs);
+  color: var(--color-muted);
+}
+
+.error,
+.notice {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  margin: 0;
+  padding: var(--space-3);
+  border-radius: var(--radius-md);
+  font-size: var(--fs-sm);
+}
+
+.error {
+  background: rgba(196, 6, 15, 0.08);
+  color: var(--color-danger);
+}
+
+.notice {
+  background: rgba(23, 173, 55, 0.08);
+  color: var(--color-success);
+}
+
+/* Nhóm đối tượng */
+.categories {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2);
+  margin: 0;
+  padding: 0;
+  border: 0;
+}
+
+.categories legend {
+  width: 100%;
+  margin-bottom: var(--space-2);
+  font-size: var(--fs-xs);
+  font-weight: var(--fw-bold);
+  color: var(--color-heading);
+}
+
+.chip {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-1);
+  padding: 0.35rem 0.7rem;
+  border: 1px solid var(--color-border);
+  border-radius: 999px;
+  font-size: var(--fs-xs);
+  cursor: pointer;
+}
+
+.chip:has(input:checked) {
+  border-color: var(--color-primary);
+  background: rgba(7, 130, 224, 0.08);
+  color: var(--color-primary);
+}
+
+/* Danh sách nhân khẩu */
+.members {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+}
+
+.sectionTitle {
+  font-size: var(--fs-sm);
+  text-transform: uppercase;
+  opacity: 0.7;
+}
+
+.empty {
+  font-size: var(--fs-sm);
+  color: var(--color-muted);
+}

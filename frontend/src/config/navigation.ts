@@ -21,6 +21,7 @@ export const ROUTES = {
   sos: '/sos',
   // Tài khoản
   profile: '/ho-so',
+  accounts: '/quan-ly-tai-khoan',
   signIn: '/dang-nhap',
   changePassword: '/doi-mat-khau',
 } as const;
@@ -81,7 +82,10 @@ export const sidebarNav: NavSection[] = [
   },
   {
     title: 'Tài khoản',
-    items: [{ label: 'Hồ sơ của tôi', path: ROUTES.profile, icon: 'user' }],
+    items: [
+      { label: 'Hồ sơ của tôi', path: ROUTES.profile, icon: 'user' },
+      { label: 'Quản lý tài khoản', path: ROUTES.accounts, icon: 'userPlus', roles: LEADER },
+    ],
   },
 ];
 
