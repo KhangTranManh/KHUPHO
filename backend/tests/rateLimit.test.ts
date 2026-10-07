@@ -13,7 +13,7 @@ vi.hoisted(() => {
     WRITE_RATE_LIMIT: '5',
     LOGIN_RATE_LIMIT: '3',
     MAX_SESSIONS_PER_USER: '2',
-    CLIENT_IP_HEADER: 'cf-connecting-ip',
+    CLIENT_IP_HEADER: 'x-vercel-forwarded-for,cf-connecting-ip',
   });
 });
 
@@ -66,6 +66,9 @@ describe('IP thật sau Cloudflare (CLIENT_IP_HEADER)', () => {
   it('lấy IP từ CF-Connecting-IP, bỏ qua giá trị không phải IP', async () => {
     const ok = await request(app).get('/api/health').set('CF-Connecting-IP', '198.51.100.7');
     expect(ok.body.clientIp).toBe('198.51.100.7');
+    // Đi qua Vercel: x-vercel-forwarded-for (IP người dùng) được ưu tiên hơn cf-connecting-ip (IP của Vercel).
+    const viaVercel = await request(app).get('/api/health').set('x-vercel-forwarded-for', '198.51.100.9').set('CF-Connecting-IP', '76.76.21.21');
+    expect(viaVercel.body.clientIp).toBe('198.51.100.9');
     const bad = await request(app).get('/api/health').set('CF-Connecting-IP', 'khong-phai-ip');
     expect(bad.body.clientIp).not.toBe('khong-phai-ip');
   });

@@ -51,10 +51,16 @@ const envSchema = z.object({
     .transform((v) => (v === undefined || v === "false" ? false : v === "true" ? true : /^d+$/.test(v) ? Number(v) : v)),
 
   /**
-   * Header chứa IP thật của người dùng do proxy phía trước đặt — VD "cf-connecting-ip" khi đi qua Cloudflare
-   * (Cloudflare Tunnel KHÔNG gửi X-Forwarded-For). Chỉ đặt khi backend không thể bị gọi trực tiếp bỏ qua proxy.
+   * Header chứa IP thật của người dùng do proxy phía trước đặt, nhiều header cách nhau dấu phẩy — lấy header ĐẦU TIÊN có giá trị.
+   *   Cloudflare trực tiếp:       cf-connecting-ip   (Cloudflare Tunnel KHÔNG gửi X-Forwarded-For)
+   *   Vercel rewrite → Cloudflare: x-vercel-forwarded-for,cf-connecting-ip   (cf-connecting-ip lúc này là IP của Vercel)
+   * Header do proxy đặt nên chỉ tin được khi mọi request đều đi qua proxy đó.
    */
-  CLIENT_IP_HEADER: z.string().regex(/^[a-z0-9-]+$/i, "tên header không hợp lệ").optional(),
+  CLIENT_IP_HEADER: z
+    .string()
+    .regex(/^[a-z0-9-]+(,[a-z0-9-]+)*$/i, "danh sách tên header không hợp lệ")
+    .optional()
+    .transform((v) => v?.split(",") ?? []),
 
   CORS_ORIGINS: z
     .string()

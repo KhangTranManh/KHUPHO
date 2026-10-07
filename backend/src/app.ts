@@ -22,11 +22,16 @@ export function createApp() {
   // Sau proxy: lấy IP người dùng từ X-Forwarded-For (TRUST_PROXY trong .env) — rate limit theo đúng người.
   app.set('trust proxy', env.TRUST_PROXY);
   // Cloudflare: IP thật nằm ở CF-Connecting-IP (CLIENT_IP_HEADER) → dùng cho rate limit, log, /health.
-  if (env.CLIENT_IP_HEADER) {
-    const header = env.CLIENT_IP_HEADER;
+  if (env.CLIENT_IP_HEADER.length) {
+    const headers = env.CLIENT_IP_HEADER;
     app.use((req, _res, next) => {
-      const ip = req.get(header)?.split(',')[0].trim();
-      if (ip && isIP(ip)) Object.defineProperty(req, 'ip', { value: ip, configurable: true });
+      for (const header of headers) {
+        const ip = req.get(header)?.split(',')[0].trim();
+        if (ip && isIP(ip)) {
+          Object.defineProperty(req, 'ip', { value: ip, configurable: true });
+          break;
+        }
+      }
       next();
     });
   }
