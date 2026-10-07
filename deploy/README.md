@@ -87,10 +87,13 @@ Khởi tạo / kiểm tra database: chạy **từ máy bạn** (cùng `MONGODB_U
 
 ## Cập nhật phiên bản mới
 
+Push code lên GitHub, rồi trên VPS:
 ```bash
-cd KHUPHO && git pull && cd deploy && docker compose --profile <quick|named> up -d --build
-# Lưu ý: profile quick sẽ đổi địa chỉ trycloudflare nếu container tunnel bị tạo lại.
-docker image prune -f                    # xoá image cũ
+bash /srv/webkhupho/deploy/update.sh          # git pull → build lại backend → chờ /api/health
+bash /srv/webkhupho/deploy/tunnel-url.sh      # in địa chỉ trycloudflare hiện tại
 ```
+- `update.sh` chỉ tạo lại container backend, nên **tunnel giữ nguyên địa chỉ**. Đang dùng tunnel có tên miền thì chạy `PROFILE=named bash …/update.sh`.
+- `deploy/.env` không nằm trong git nên `git pull` không ghi đè. Muốn đổi cấu hình thì sửa `deploy/.env` rồi chạy lại `update.sh`.
+- User chưa thuộc nhóm `docker` thì script tự dùng `sudo` (sẽ hỏi mật khẩu).
 
 Sao lưu định kỳ, chạy từ máy bạn: `cd database && npm run backup`. Bản sao lưu nằm ở `database/backups/`, đã mã hoá, không commit.
