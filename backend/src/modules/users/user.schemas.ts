@@ -20,11 +20,13 @@ export const createUserSchema = z
     fullName: z.string().trim().min(2).max(120),
     phone: phoneSchema.optional(),
     email: z.email().transform((v) => v.toLowerCase()).optional(),
-    password: passwordSchema,
+    /** Bỏ trống → tài khoản chưa kích hoạt, người dùng nhận mật khẩu tạm qua SMS khi đăng nhập lần đầu. */
+    password: passwordSchema.optional(),
     role: z.enum(ROLES),
     /** Cư dân: CCCD của nhân khẩu để liên kết tài khoản. */
     citizenId: z.string().regex(/^\d{12}$/, 'Số CCCD gồm 12 chữ số').optional(),
   })
-  .refine((u) => u.phone || u.email, { path: ['phone'], message: 'Cần SĐT hoặc email để đăng nhập' });
+  .refine((u) => u.phone || u.email, { path: ['phone'], message: 'Cần SĐT hoặc email để đăng nhập' })
+  .refine((u) => u.password || u.phone, { path: ['password'], message: 'Tài khoản không có SĐT cần đặt mật khẩu' });
 
 export type CreateUserInput = z.input<typeof createUserSchema>;

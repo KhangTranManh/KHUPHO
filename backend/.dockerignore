@@ -1,0 +1,8 @@
+# Không đưa vào image: dependency cài lại trong Docker, file build cũ, test, cấu hình bí mật.
+node_modules
+dist
+coverage
+tests
+*.log
+.env
+.env.*

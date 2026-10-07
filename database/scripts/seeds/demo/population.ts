@@ -2,12 +2,12 @@
  * Dữ liệu mẫu — lõi dân cư: khu vực, hộ gia đình (nhúng nhân khẩu, lịch sử cư trú, danh hiệu văn hoá),
  * nhật ký biến động. Hộ đầu tiên là hộ của tài khoản cư dân mẫu.
  */
-import { addDays, toISODate } from '../../../../src/common/utils/date.js';
-import { AreaModel } from '../../../../src/modules/areas/area.model.js';
-import { ResidentChangeModel, type ChangeType } from '../../../../src/modules/changes/residentChange.model.js';
-import type { HouseholdType } from '../../../../src/modules/households/household.constants.js';
-import { HouseholdModel } from '../../../../src/modules/households/household.model.js';
-import type { Relation, ResidenceStatus, ResidentCategory } from '../../../../src/modules/residents/resident.constants.js';
+import { addDays, toISODate } from '../../../../backend/src/common/utils/date.js';
+import { AreaModel } from '../../../../backend/src/modules/areas/area.model.js';
+import { ResidentChangeModel, type ChangeType } from '../../../../backend/src/modules/changes/residentChange.model.js';
+import type { HouseholdType } from '../../../../backend/src/modules/households/household.constants.js';
+import { HouseholdModel } from '../../../../backend/src/modules/households/household.model.js';
+import type { Relation, ResidenceStatus, ResidentCategory } from '../../../../backend/src/modules/residents/resident.constants.js';
 import type { Random } from '../../lib/random.js';
 import { createEach } from '../../lib/run.js';
 import {
@@ -119,7 +119,11 @@ export function createPeople(r: Random, today: Date, officer: string) {
   return { name, phone, member };
 }
 
-export async function seedPopulation(r: Random, today: Date, officer: string) {
+/**
+ * `extraResidentPhones`: SĐT của tài khoản cư dân khác (VD: SEED_FIRST_LOGIN) → gán cho chủ hộ HK-1002, HK-1003…
+ * để tài khoản tự liên kết hộ theo SĐT.
+ */
+export async function seedPopulation(r: Random, today: Date, officer: string, extraResidentPhones: string[] = []) {
   const people = createPeople(r, today, officer);
 
   // ── Khu vực
@@ -171,6 +175,8 @@ export async function seedPopulation(r: Random, today: Date, officer: string) {
         head.citizenId = RESIDENT_HOUSEHOLD.headCitizenId;
         head.categories = ['nguoi_cao_tuoi', 'cuu_chien_binh'];
       }
+      const extraPhone = extraResidentPhones[seq - 2];
+      if (extraPhone) head.phone = extraPhone;
       const members: MemberSeed[] = [head];
 
       if (headAge >= 24 && r.chance(0.78)) {

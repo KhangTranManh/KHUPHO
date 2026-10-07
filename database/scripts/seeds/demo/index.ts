@@ -4,11 +4,11 @@
  * Chỉ chạy khi DB chưa có hộ nào — không trộn dữ liệu mẫu vào dữ liệu thật.
  * Cần tài khoản trưởng KP + công an KV (bước users) để làm tác giả / người xử lý.
  */
-import { HouseholdModel } from '../../../../src/modules/households/household.model.js';
-import { UserModel } from '../../../../src/modules/users/user.model.js';
+import { HouseholdModel } from '../../../../backend/src/modules/households/household.model.js';
+import { UserModel } from '../../../../backend/src/modules/users/user.model.js';
 import { createRandom } from '../../lib/random.js';
 import { step } from '../../lib/run.js';
-import { linkResidentAccounts } from '../users.js';
+import { firstLoginAccounts, linkResidentAccounts } from '../users.js';
 import { seedActivities, seedFundPayments, seedPosts, seedReports, seedSurveys, type Actor } from './community.js';
 import { seedPopulation } from './population.js';
 
@@ -31,7 +31,10 @@ export async function seedDemo() {
   const r = createRandom(SEED);
   const today = new Date();
 
-  const { areas, households, changeCount } = await seedPopulation(r, today, leader.name);
+  const residentPhones = firstLoginAccounts()
+    .filter((a) => a.role === 'cu_dan')
+    .map((a) => a.phone);
+  const { areas, households, changeCount } = await seedPopulation(r, today, leader.name, residentPhones);
   const memberCount = households.reduce((n, h) => n + h.members.length, 0);
   step('Khu vực', areas.length);
   step('Hộ gia đình / nhân khẩu', `${households.length} hộ, ${memberCount} người`);

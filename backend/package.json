@@ -13,10 +13,17 @@
     "typecheck": "tsc --noEmit",
     "test": "vitest run",
     "test:watch": "vitest",
-    "db:setup": "tsx scripts/db/setup.ts",
-    "db:status": "tsx scripts/db/status.ts",
-    "db:sync-indexes": "tsx scripts/db/sync-indexes.ts",
-    "db:reset": "tsx scripts/db/reset.ts"
+    "db:setup": "tsx ../database/scripts/setup.ts",
+    "db:status": "tsx ../database/scripts/status.ts",
+    "db:stats": "tsx ../database/scripts/stats.ts",
+    "db:check": "tsx ../database/scripts/check.ts",
+    "db:find": "tsx ../database/scripts/find.ts",
+    "db:backup": "tsx ../database/scripts/backup.ts",
+    "db:restore": "tsx ../database/scripts/restore.ts",
+    "db:wipe": "tsx ../database/scripts/wipe.ts",
+    "db:reset": "tsx ../database/scripts/reset.ts",
+    "db:sync-indexes": "tsx ../database/scripts/sync-indexes.ts",
+    "db:add-user": "tsx ../database/scripts/add-user.ts"
   },
   "dependencies": {
     "bcryptjs": "^3.0.3",

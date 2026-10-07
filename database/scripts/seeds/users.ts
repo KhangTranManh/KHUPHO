@@ -3,12 +3,12 @@
  * Mật khẩu lấy từ SEED_*_PASSWORD trong .env; bỏ trống → tự sinh và in ra một lần.
  * Chạy lại an toàn: tài khoản đã có (cùng SĐT) được bỏ qua, không đổi mật khẩu.
  */
-import { blindIndex } from '../../../src/common/security/fieldEncryption.js';
-import { generatePassword } from '../../../src/common/security/password.js';
-import { HouseholdModel } from '../../../src/modules/households/household.model.js';
-import { UserModel } from '../../../src/modules/users/user.model.js';
-import type { Role } from '../../../src/modules/users/user.roles.js';
-import { createUser } from '../../../src/modules/users/user.service.js';
+import { blindIndex } from '../../../backend/src/common/security/fieldEncryption.js';
+import { generatePassword } from '../../../backend/src/common/security/password.js';
+import { HouseholdModel } from '../../../backend/src/modules/households/household.model.js';
+import { UserModel } from '../../../backend/src/modules/users/user.model.js';
+import { ROLES, type Role } from '../../../backend/src/modules/users/user.roles.js';
+import { createUser } from '../../../backend/src/modules/users/user.service.js';
 import { step } from '../lib/run.js';
 
 export const SEED_USERS: { role: Role; fullName: string; phone: string; passwordEnv: string }[] = [
@@ -17,16 +17,46 @@ export const SEED_USERS: { role: Role; fullName: string; phone: string; password
   { role: 'cu_dan', fullName: 'Nguyễn Văn An', phone: '0900000004', passwordEnv: 'SEED_CU_DAN_PASSWORD' },
 ];
 
+/**
+ * Tài khoản CHƯA KÍCH HOẠT (không có mật khẩu) — để thử luồng đăng nhập lần đầu:
+ * nhập SĐT → nhận mật khẩu tạm qua SMS → đăng nhập → bắt buộc đổi mật khẩu.
+ * Khai báo trong .env (SĐT thật không nằm trong code / git), dạng `SĐT:vai_trò[:Họ tên]`, cách nhau dấu phẩy:
+ *   SEED_FIRST_LOGIN=0912345678:truong_kp,0987654321:cu_dan
+ * Cư dân trong danh sách được gán làm chủ hộ HK-1002, HK-1003… khi tạo dữ liệu mẫu (--demo) để liên kết hộ.
+ */
+export function firstLoginAccounts(raw = process.env.SEED_FIRST_LOGIN ?? '') {
+  return raw
+    .split(',')
+    .map((s) => s.trim())
+    .filter(Boolean)
+    .map((entry) => {
+      const [phone, role, fullName] = entry.split(':').map((s) => s.trim());
+      if (!/^0\d{9}$/.test(phone)) throw new Error(`SEED_FIRST_LOGIN: SĐT không hợp lệ "${phone}"`);
+      if (!(ROLES as readonly string[]).includes(role)) {
+        throw new Error(`SEED_FIRST_LOGIN: vai trò "${role}" không hợp lệ (${ROLES.join(' / ')})`);
+      }
+      return { phone, role: role as Role, fullName: fullName || `Người dùng ${phone.slice(-4)}` };
+    });
+}
+
 export async function seedUsers() {
   const created: { role: string; login: string; password: string }[] = [];
+  const exists = (phone: string) => UserModel.exists({ phoneHash: blindIndex('phone', phone) });
 
   for (const { passwordEnv, ...user } of SEED_USERS) {
-    if (await UserModel.exists({ phoneHash: blindIndex('phone', user.phone) })) continue;
+    if (await exists(user.phone)) continue;
     const password = process.env[passwordEnv] || generatePassword();
     await createUser({ ...user, password });
     created.push({ role: user.role, login: user.phone, password: process.env[passwordEnv] ? `(${passwordEnv})` : password });
   }
-  step('Tài khoản', `thêm ${created.length}/${SEED_USERS.length}`);
+
+  const firstLogin = firstLoginAccounts();
+  for (const user of firstLogin) {
+    if (await exists(user.phone)) continue;
+    await createUser(user);
+    created.push({ role: user.role, login: user.phone, password: '— chưa có: đăng nhập lần đầu bằng mật khẩu tạm (SMS)' });
+  }
+  step('Tài khoản', `thêm ${created.length}/${SEED_USERS.length + firstLogin.length}`);
 
   const linked = await linkResidentAccounts();
   step('Liên kết cư dân ↔ nhân khẩu', `${linked} tài khoản`);

@@ -15,7 +15,10 @@ async function findMemberByCitizenId(citizenId: string) {
   return household && member ? { householdId: household._id, memberId: member._id } : null;
 }
 
-/** Tạo tài khoản (seed, sau này cho API quản trị). Mật khẩu được băm, thông tin cá nhân được mã hoá. */
+/**
+ * Tạo tài khoản (seed, sau này cho API quản trị). Mật khẩu được băm, thông tin cá nhân được mã hoá.
+ * Không có mật khẩu → tài khoản chưa kích hoạt; người dùng xin mật khẩu tạm qua SMS (POST /auth/temp-password).
+ */
 export async function createUser(input: CreateUserInput): Promise<PublicUser> {
   const { password, citizenId, ...data } = parseInput(createUserSchema, input);
 
@@ -32,7 +35,7 @@ export async function createUser(input: CreateUserInput): Promise<PublicUser> {
   const user = await UserModel.create({
     ...data,
     residentRef: residentRef ?? undefined,
-    passwordHash: await hashPassword(password),
+    passwordHash: password ? await hashPassword(password) : undefined,
   });
   return toPublicUser(user);
 }

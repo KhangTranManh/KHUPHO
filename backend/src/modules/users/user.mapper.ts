@@ -13,6 +13,8 @@ export interface PublicUser {
   householdId?: string;
   memberId?: string;
   lastLoginAt?: string;
+  /** Đăng nhập bằng mật khẩu tạm — phải đổi mật khẩu trước. */
+  mustChangePassword: boolean;
 }
 
 interface UserLike {
@@ -23,6 +25,7 @@ interface UserLike {
   email?: unknown;
   residentRef?: { householdId: Types.ObjectId; memberId: Types.ObjectId } | null;
   lastLoginAt?: Date | null;
+  mustChangePassword?: boolean | null;
   toObject?: (opts: { getters: boolean }) => UserLike;
 }
 
@@ -38,5 +41,6 @@ export function toPublicUser(input: UserLike): PublicUser {
     householdId: u.residentRef?.householdId?.toString(),
     memberId: u.residentRef?.memberId?.toString(),
     lastLoginAt: u.lastLoginAt?.toISOString(),
+    mustChangePassword: u.mustChangePassword ?? false,
   };
 }

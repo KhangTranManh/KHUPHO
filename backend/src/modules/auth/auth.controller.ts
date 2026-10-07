@@ -3,7 +3,7 @@ import { Errors } from '../../common/errors/AppError.js';
 import { requireAuth } from '../../common/middlewares/authenticate.js';
 import { parseInput } from '../../common/http/validation.js';
 import { readBearerToken, verifyAccessToken } from './accessToken.js';
-import { loginSchema } from './auth.schemas.js';
+import { changePasswordSchema, firebaseLoginSchema, loginSchema, tempPasswordRequestSchema } from './auth.schemas.js';
 import * as authService from './auth.service.js';
 import type { AuthResult } from './auth.service.js';
 import type { ClientInfo } from './auth.types.js';
@@ -34,6 +34,31 @@ function sendAuthResult(res: Response, result: AuthResult) {
 export async function login(req: Request, res: Response) {
   const input = parseInput(loginSchema, req.body);
   sendAuthResult(res, await authService.login(input, clientInfo(req)));
+}
+
+/**
+ * POST /auth/temp-password — gửi mật khẩu tạm qua SMS. Luôn 200 với cùng thông điệp
+ * (không lộ SĐT nào có tài khoản). Ngoài production + SMS mock: kèm `devTempPassword`.
+ */
+export async function requestTempPassword(req: Request, res: Response) {
+  const { phone } = parseInput(tempPasswordRequestSchema, req.body);
+  const result = await authService.requestTempPassword(phone);
+  res.json({
+    message: 'Nếu số điện thoại đã đăng ký với khu phố, mật khẩu tạm sẽ được gửi qua SMS trong giây lát.',
+    ...result,
+  });
+}
+
+/** POST /auth/firebase-login — đăng nhập bằng SĐT đã xác minh OTP qua Firebase. */
+export async function firebaseLogin(req: Request, res: Response) {
+  const { idToken } = parseInput(firebaseLoginSchema, req.body);
+  sendAuthResult(res, await authService.loginWithFirebase(idToken, clientInfo(req)));
+}
+
+/** POST /auth/change-password — trả user mới (mustChangePassword = false). */
+export async function changePassword(req: Request, res: Response) {
+  const input = parseInput(changePasswordSchema, req.body);
+  res.json({ user: await authService.changePassword(requireAuth(req), input) });
 }
 
 /** POST /auth/refresh — dùng cookie refresh token, trả access token mới. */

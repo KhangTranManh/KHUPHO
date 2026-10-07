@@ -51,6 +51,9 @@ export const Errors = {
       { lockedUntil: lockedUntil.toISOString() },
     ),
 
+  passwordChangeRequired: () =>
+    new AppError(403, 'PASSWORD_CHANGE_REQUIRED', 'Bạn cần đổi mật khẩu trước khi tiếp tục'),
+
   tooManyRequests: () =>
     new AppError(429, 'TOO_MANY_REQUESTS', 'Thao tác quá nhiều lần, vui lòng thử lại sau ít phút'),
 };

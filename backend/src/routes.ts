@@ -5,7 +5,7 @@ import { changesRouter } from './modules/changes/change.routes.js';
 import { activitiesRouter, culturalFamiliesRouter, surveysRouter } from './modules/community/community.routes.js';
 import { dashboardRouter } from './modules/dashboard/dashboard.routes.js';
 import { directoryRouter } from './modules/directory/directory.routes.js';
-import { fundsRouter } from './modules/funds/fund.routes.js';
+import { fundsRouter, paymentsRouter } from './modules/funds/fund.routes.js';
 import { healthRouter } from './modules/health/health.routes.js';
 import { householdsRouter } from './modules/households/household.routes.js';
 import { notificationsRouter } from './modules/notifications/notification.routes.js';
@@ -42,6 +42,7 @@ export function buildApiRouter() {
 
   // 5. Thu quỹ
   api.use('/funds', fundsRouter);
+  api.use('/payments', paymentsRouter);
 
   // 6. Cộng đồng
   api.use('/surveys', surveysRouter);

@@ -12,6 +12,16 @@ const residentRefSchema = new Schema(
   { _id: false },
 );
 
+/** Mật khẩu tạm đang chờ dùng. */
+const tempPasswordSchema = new Schema(
+  {
+    hash: { type: String, required: true },
+    expiresAt: { type: Date, required: true },
+    sentAt: { type: Date, required: true },
+  },
+  { _id: false },
+);
+
 /**
  * Collection `users` — tài khoản đăng nhập. Đăng nhập bằng SĐT hoặc email.
  * Họ tên / SĐT / email được mã hoá; phoneHash / emailHash (blind index, unique) để tra cứu khi đăng nhập.
@@ -24,7 +34,12 @@ const userSchema = new Schema(
     phoneHash: { type: String },
     email: encryptedString(),
     emailHash: { type: String },
-    passwordHash: { type: String, required: true, select: false },
+    /** Trống = tài khoản chưa kích hoạt: đăng nhập lần đầu bằng mật khẩu tạm gửi qua SMS. */
+    passwordHash: { type: String, select: false },
+    /** Đăng nhập bằng mật khẩu tạm → bắt buộc đổi mật khẩu trước khi dùng các chức năng khác. */
+    mustChangePassword: { type: Boolean, default: false },
+    /** Mật khẩu tạm gửi qua SMS (băm bcrypt), dùng một lần, có hạn. */
+    tempPassword: { type: tempPasswordSchema, default: undefined, select: false },
     role: { type: String, enum: ROLES, required: true },
     status: { type: String, enum: USER_STATUSES, required: true, default: 'active' },
     residentRef: { type: residentRefSchema, default: undefined },

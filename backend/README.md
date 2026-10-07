@@ -8,8 +8,7 @@ Node.js 22+ · Express 5 · TypeScript · MongoDB (Mongoose) · Zod · JWT
 cd backend
 # cấu hình nằm ở .env thư mục gốc (cp ../.env.example ../.env nếu chưa có)
 npm install
-npm run seed:users            # tạo 3 tài khoản mẫu, in mật khẩu ra màn hình
-npm run seed:reference        # 8 khoản quỹ + số khẩn cấp
+npm run db:setup -- --demo    # tạo database khupho: collection, index, dữ liệu nền, 3 tài khoản, dữ liệu mẫu
 npm run dev                   # http://localhost:4000/api
 ```
 
@@ -21,9 +20,7 @@ MongoDB local: xem `database/README.md`.
 | `npm run build` / `npm start` | Biên dịch ra `dist/` và chạy bản build |
 | `npm test` | Test với MongoDB in-memory (lần đầu tự tải MongoDB, hơi lâu) |
 | `npm run typecheck` | Kiểm tra kiểu |
-| `npm run seed:users` | Tạo 3 tài khoản mẫu (trưởng KP, công an KV, cư dân) nếu chưa có |
-| `npm run seed:reference` | Tạo 8 khoản quỹ năm nay + số khẩn cấp 113/114/115 nếu chưa có |
-| `npm run db:sync-indexes` | Đồng bộ index (dùng khi deploy production) |
+| `npm run db:<lệnh>` | Công cụ database: setup, status, stats, check, find, backup, restore, wipe, reset, sync-indexes — xem `database/README.md` |
 
 ## Cấu trúc
 
@@ -97,6 +94,9 @@ Tên / SĐT người gửi luôn lấy từ tài khoản, không nhận từ bod
 | | `GET /api/funds/:id/households` | Trưởng KP | `filter`: `da_dong` / `chua_dong`; kèm số tiền phải đóng |
 | | `POST /api/funds/:id/payments` | Trưởng KP | Đánh dấu đã đóng → lưu khoản đóng → gửi thông báo đến hộ |
 | | `POST /api/funds/:id/reminders` | Trưởng KP | Nhắc mọi hộ chưa đóng |
+| | `GET /api/funds/:id/my-payment` | Đăng nhập | Khoản phải đóng của hộ tôi + nội dung chuyển khoản `QKP <MÃ QUỸ> <SỐ HỘ>` + tài khoản nhận + trạng thái (màn hình QR hỏi lại mỗi 5 giây) |
+| | `GET /api/funds/bank-transactions` | Trưởng KP | Chuyển khoản không tự ghi nhận được (sai nội dung / thiếu / trùng); `?all=true` = mọi giao dịch |
+| | `POST /api/payments/sepay-webhook` | API key | SePay báo tiền vào → tự ghi "đã đóng" + báo hộ. Header `Authorization: Apikey <BANK_WEBHOOK_API_KEY>` |
 | **6. Cộng đồng** | `GET /api/surveys`, `POST` | Đăng nhập / Trưởng KP | Theo phạm vi (toàn khu phố / khu vực); kèm `hasResponded` |
 | | `POST /api/surveys/:id/responses` | Đăng nhập | Mỗi tài khoản một lần; kết quả cộng dồn atomic |
 | | `GET /api/activities`, `POST` | Đăng nhập / Trưởng KP | Lịch sinh hoạt |
@@ -107,7 +107,7 @@ Mỗi module trong `src/modules/<tên>/` gồm: `*.model.ts` (schema + index), `
 `*.schemas.ts` (zod cho query / body), `*.service.ts` (nghiệp vụ), `*.controller.ts` (HTTP), `*.routes.ts`.
 Model mới phải thêm vào `src/models.ts` (dùng cho đồng bộ index).
 
-Dữ liệu nền: `npm run seed:reference` tạo 8 khoản quỹ năm nay và số khẩn cấp 113 / 114 / 115.
+Công cụ database (khởi tạo, thống kê, kiểm tra, sao lưu, xoá) ở `database/scripts/` — xem `database/README.md`.
 
 ## Xác thực
 
@@ -129,14 +129,57 @@ Ba vai trò dùng chung một luồng đăng nhập:
 | `POST /api/auth/logout` | | Thu hồi phiên hiện tại, xoá cookie (vẫn chạy khi access token đã hết hạn) |
 | `POST /api/auth/logout-all` | ✓ | Thu hồi mọi phiên của tài khoản |
 | `GET /api/auth/me` | ✓ | `{ user }` |
-| `GET /api/health` | | Trạng thái API + DB |
+| `POST /api/auth/temp-password` | | `{ phone }` → gửi mật khẩu tạm qua SMS (đăng nhập lần đầu / quên mật khẩu). Luôn 200, cùng thông điệp; SMS mock + ngoài production trả kèm `devTempPassword` |
+| `POST /api/auth/firebase-login` | | `{ idToken }`: ID token Firebase sau khi nhập đúng OTP SMS → đăng nhập, `mustChangePassword = true`. Bật khi có `FIREBASE_PROJECT_ID` |
+| `POST /api/auth/change-password` | ✓ | `{ newPassword, currentPassword? }` → `{ user }`. Vừa đăng nhập bằng mật khẩu tạm thì không cần `currentPassword`; đăng xuất các thiết bị khác |
+
+**Đăng nhập lần đầu.** Tài khoản có thể tạo **không có mật khẩu** (VD: `SEED_FIRST_LOGIN` trong `.env`).
+Người dùng nhập SĐT → nhận mật khẩu tạm 8 ký tự qua SMS (hết hạn sau `TEMP_PASSWORD_TTL_MINUTES`, dùng một lần,
+gửi lại cách nhau `TEMP_PASSWORD_RESEND_SECONDS`) → đăng nhập → `user.mustChangePassword = true` → mọi API khác
+trả `403 PASSWORD_CHANGE_REQUIRED` cho tới khi gọi `change-password`. Quên mật khẩu dùng đúng luồng này.
+SMS hiện là mock (`SMS_PROVIDER=mock`, ghi ra log) — thêm nhà cung cấp thật trong `src/common/sms/sms.ts`.
+Hoặc dùng **Firebase** (`VITE_PHONE_AUTH=firebase`): Firebase gửi và kiểm tra OTP, backend kiểm tra ID token bằng khoá công khai
+của Google (`src/common/security/firebaseToken.ts`, chỉ cần `FIREBASE_PROJECT_ID`) rồi cấp phiên như đăng nhập bằng mật khẩu tạm.
+Mọi cấu hình (Firebase, rate limit, bcrypt, thời hạn token…) nằm trong `.env`, không ghi cứng trong code.
+
+`GET /api/health` (không cần token): trạng thái API + DB.
 
 - **Access token:** JWT HS256, mặc định 15 phút, gửi qua `Authorization: Bearer …`. Frontend giữ trong bộ nhớ (không lưu localStorage).
 - **Refresh token:** chuỗi ngẫu nhiên trong cookie `wkp_rt` (httpOnly, SameSite=Strict, chỉ gửi tới `/api/auth`). DB chỉ lưu SHA-256.
 - **Mỗi request đều kiểm tra phiên trong DB** → đăng xuất, khoá tài khoản, đổi vai trò có hiệu lực ngay.
 - **Xoay vòng refresh token:** dùng lại token cũ bị coi là bị đánh cắp → thu hồi cả phiên.
   Frontend cần đảm bảo chỉ có **một** request refresh tại một thời điểm.
-- **Chống dò mật khẩu:** sai `LOGIN_MAX_FAILED_ATTEMPTS` lần → khoá `LOGIN_LOCK_MINUTES` phút; thêm giới hạn 20 lần / 15 phút / IP.
+- **Chống dò mật khẩu:** sai `LOGIN_MAX_FAILED_ATTEMPTS` lần thì khoá `LOGIN_LOCK_MINUTES` phút (theo tài khoản).
+- **Rate limit theo IP** (`src/common/middlewares/rateLimiters.ts`, số liệu trong `.env`, vượt thì trả `429 TOO_MANY_REQUESTS`):
+
+  | Phạm vi | Mặc định |
+  |---|---|
+  | Mọi API | `API_RATE_LIMIT` = 300 / phút |
+  | API ghi (POST / PUT / PATCH / DELETE) | `WRITE_RATE_LIMIT` = 30 / phút |
+  | Đăng nhập, OTP Firebase, đổi mật khẩu | `LOGIN_RATE_LIMIT` = 20 / 15 phút |
+  | Xin mật khẩu tạm | `TEMP_PASSWORD_RATE_LIMIT` = 5 / 15 phút, mỗi SĐT cách nhau `TEMP_PASSWORD_RESEND_SECONDS` |
+
+  `/api/health` và webhook ngân hàng (đã xác thực bằng API key) không bị giới hạn. Request bị chặn không chạm tới DB.
+  Bộ đếm nằm trong bộ nhớ và tự xoá sau mỗi khoảng thời gian, nên bộ nhớ chỉ tăng theo số IP đang hoạt động.
+  Chạy nhiều bản backend cùng lúc thì cần store dùng chung (Redis).
+- **Giới hạn phiên:** mỗi tài khoản giữ tối đa `MAX_SESSIONS_PER_USER` phiên; đăng nhập thêm thì phiên cũ nhất bị thu hồi. Phiên hết hạn được MongoDB tự xoá (TTL).
+
+## Thu quỹ tự xác nhận (webhook ngân hàng)
+
+```
+Cư dân mở QR ── GET /funds/:id/my-payment ──▶ số tiền + "QKP <MÃ QUỸ> <SỐ HỘ>" + tài khoản nhận (PAYMENT_BANK_* hoặc funds.bank)
+Cư dân chuyển khoản ──▶ ngân hàng ──▶ SePay ── POST /payments/sepay-webhook (Authorization: Apikey …) ──▶ backend
+backend: đọc mã quỹ + số hộ (so với dữ liệu thật) → đủ tiền → fund_payments "đã đóng" + thông báo đến hộ
+         mọi giao dịch lưu vào bank_transactions (nội dung MÃ HOÁ); trùng providerId → bỏ qua
+```
+
+- Code: `src/modules/funds/` gồm `transferContent.ts` (tạo / đọc nội dung), `bankTransfer.service.ts` (đối soát, độc lập nhà cung cấp),
+  `sepayWebhook.ts` (xác thực + chuẩn hoá payload SePay). Thêm nhà cung cấp khác (Casso, PayOS…): viết adapter như `sepayWebhook.ts`
+  rồi gọi `handleIncomingTransfer`.
+- Không tự ghi nhận (`unmatched` sai nội dung, `underpaid` thiếu tiền, `already_paid` chuyển trùng, `fund_closed`):
+  trưởng KP xem ở `GET /funds/bank-transactions`, rồi đánh dấu tay hoặc hoàn tiền.
+- Thử ở máy, không cần SePay:
+  `curl -X POST http://localhost:4000/api/payments/sepay-webhook -H "Authorization: Apikey <KEY>" -H "Content-Type: application/json" -d '{"id":1,"transferType":"in","transferAmount":45000,"content":"QKP VINGUOINGHEO HK1001","transactionDate":"2026-10-05 10:00:00"}'`
 
 ### Phân quyền cho route mới
 

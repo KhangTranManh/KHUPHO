@@ -1,0 +1,19 @@
+{
+  "name": "webkhupho-database",
+  "private": true,
+  "type": "module",
+  "description": "Công cụ quản trị MongoDB. Không có dependency riêng: dùng node_modules của backend. Chạy được từ đây (npm run status) hoặc từ backend (npm run db:status).",
+  "scripts": {
+    "setup": "npm --prefix ../backend run db:setup --",
+    "status": "npm --prefix ../backend run db:status --",
+    "stats": "npm --prefix ../backend run db:stats --",
+    "check": "npm --prefix ../backend run db:check --",
+    "find": "npm --prefix ../backend run db:find --",
+    "backup": "npm --prefix ../backend run db:backup --",
+    "restore": "npm --prefix ../backend run db:restore --",
+    "wipe": "npm --prefix ../backend run db:wipe --",
+    "reset": "npm --prefix ../backend run db:reset --",
+    "sync-indexes": "npm --prefix ../backend run db:sync-indexes --",
+    "add-user": "npm --prefix ../backend run db:add-user --"
+  }
+}

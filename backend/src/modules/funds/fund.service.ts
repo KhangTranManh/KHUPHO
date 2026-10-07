@@ -2,16 +2,18 @@ import { Types, isValidObjectId } from 'mongoose';
 import { Errors } from '../../common/errors/AppError.js';
 import { householdSearchCondition } from '../households/household.service.js';
 import { toHouseholdView } from '../households/household.mapper.js';
-import { HouseholdModel } from '../households/household.model.js';
+import { HouseholdModel, type HouseholdDocument } from '../households/household.model.js';
 import { notifyHousehold } from '../notifications/notification.service.js';
-import type { Actor } from '../users/currentUser.js';
+import { env } from '../../config/env.js';
+import { findHouseholdOf, type Actor } from '../users/currentUser.js';
 import { FundModel, type Fund } from './fund.model.js';
 import type { FundHouseholdQuery, MarkPaidInput } from './fund.schemas.js';
 import { FundPaymentModel } from './fundPayment.model.js';
+import { buildTransferContent } from './transferContent.js';
 
 const vnd = new Intl.NumberFormat('vi-VN');
 
-async function getFund(id: string) {
+export async function getFund(id: string) {
   const fund = isValidObjectId(id) ? await FundModel.findById(id) : null;
   if (!fund) throw Errors.notFound('Không tìm thấy quỹ');
   return fund;
@@ -37,6 +39,7 @@ export async function listFunds() {
   const byFund = new Map(stats.map((s) => [String(s._id), s]));
   return funds.map((f) => ({
     ...(f.toJSON() as object),
+    bank: fundBank(f),
     totalHouseholds,
     paidHouseholds: byFund.get(f.id)?.paid ?? 0,
     collectedAmount: byFund.get(f.id)?.amount ?? 0,
@@ -79,7 +82,57 @@ export async function listFundHouseholds(fundId: string, q: FundHouseholdQuery) 
   };
 }
 
-/** Đánh dấu hộ đã đóng → lưu khoản đóng → gửi thông báo xác nhận đến hộ. */
+/** Tài khoản nhận của quỹ: riêng của quỹ (trong DB) hoặc mặc định trong .env (PAYMENT_BANK_*). */
+export function fundBank(fund: Pick<Fund, 'bank'>) {
+  if (fund.bank?.accountNo) return { bin: fund.bank.bin, accountNo: fund.bank.accountNo, accountName: fund.bank.accountName };
+  if (env.PAYMENT_BANK_BIN && env.PAYMENT_BANK_ACCOUNT_NO && env.PAYMENT_BANK_ACCOUNT_NAME) {
+    return { bin: env.PAYMENT_BANK_BIN, accountNo: env.PAYMENT_BANK_ACCOUNT_NO, accountName: env.PAYMENT_BANK_ACCOUNT_NAME };
+  }
+  return undefined;
+}
+
+type FundDoc = Awaited<ReturnType<typeof getFund>>;
+
+/**
+ * Ghi khoản đóng "đã đóng" + gửi thông báo xác nhận đến hộ.
+ * Dùng chung cho trưởng KP đánh dấu tay và webhook ngân hàng tự xác nhận.
+ * Điều kiện status ≠ da_dong trong câu cập nhật → hai lần ghi đồng thời không tạo hai khoản.
+ */
+export async function recordPayment(
+  fund: FundDoc,
+  household: HouseholdDocument,
+  data: { amount: number; method: 'qr' | 'tien_mat'; transactionCode?: string; confirmedBy: { userId?: string; name: string } },
+) {
+  const payment = await FundPaymentModel.findOneAndUpdate(
+    { fundId: fund._id, householdId: household._id, status: { $ne: 'da_dong' } },
+    {
+      $set: {
+        householdCode: household.code,
+        amount: data.amount,
+        status: 'da_dong',
+        method: data.method,
+        transactionCode: data.transactionCode,
+        paidAt: new Date(),
+        confirmedBy: data.confirmedBy,
+      },
+    },
+    { upsert: true, returnDocument: 'after', runValidators: true },
+  ).catch((err: { code?: number }) => {
+    // Trùng khoá (fundId, householdId) = đã có khoản "đã đóng" → không ghi đè.
+    if (err.code === 11000) throw Errors.conflict('Hộ này đã đóng quỹ');
+    throw err;
+  });
+
+  await notifyHousehold(household._id, {
+    kind: 'quy_dan_sinh',
+    title: `Xác nhận đóng quỹ ${fund.name}`,
+    body: `Hộ ${household.code} đã đóng ${vnd.format(data.amount)} đ cho quỹ ${fund.name}. Cảm ơn gia đình!`,
+    refId: payment!._id,
+  });
+  return payment!;
+}
+
+/** Trưởng KP đánh dấu hộ đã đóng (tiền mặt / QR đối soát tay). */
 export async function markPaid(fundId: string, input: MarkPaidInput, actor: Actor) {
   const fund = await getFund(fundId);
   if (fund.status !== 'mo') throw Errors.badRequest('Quỹ đã ngừng thu');
@@ -91,29 +144,35 @@ export async function markPaid(fundId: string, input: MarkPaidInput, actor: Acto
   const amount = input.amount ?? amountDue(fund, household.members.length);
   if (!amount) throw Errors.badRequest('Quỹ tự nguyện — vui lòng nhập số tiền');
 
-  const payment = await FundPaymentModel.findOneAndUpdate(
-    { fundId: fund._id, householdId: household._id },
-    {
-      $set: {
-        householdCode: household.code,
-        amount,
-        status: 'da_dong',
-        method: input.method,
-        transactionCode: input.transactionCode,
-        paidAt: new Date(),
-        confirmedBy: { userId: actor.userId, name: actor.fullName },
-      },
-    },
-    { upsert: true, returnDocument: 'after', runValidators: true },
-  );
-
-  await notifyHousehold(household._id, {
-    kind: 'quy_dan_sinh',
-    title: `Xác nhận đóng quỹ ${fund.name}`,
-    body: `Hộ ${household.code} đã đóng ${vnd.format(amount)} đ cho quỹ ${fund.name}. Cảm ơn gia đình!`,
-    refId: payment!._id,
+  const payment = await recordPayment(fund, household, {
+    amount,
+    method: input.method,
+    transactionCode: input.transactionCode,
+    confirmedBy: { userId: actor.userId, name: actor.fullName },
   });
   return { payment, notified: true };
+}
+
+/**
+ * Khoản phải đóng của hộ người đang đăng nhập + thông tin chuyển khoản (mã QR riêng của hộ).
+ * Màn hình QR gọi lại định kỳ để biết khi nào tiền đã về (webhook ngân hàng ghi nhận).
+ */
+export async function getMyPayment(fundId: string, actor: Actor) {
+  const fund = await getFund(fundId);
+  const household = await findHouseholdOf(actor);
+  if (!household) throw Errors.badRequest('Tài khoản chưa liên kết hộ gia đình — liên hệ trưởng khu phố');
+
+  const payment = await FundPaymentModel.findOne({ fundId: fund._id, householdId: household._id, status: 'da_dong' });
+  return {
+    fundId: fund.id,
+    householdCode: household.code,
+    amountDue: amountDue(fund, household.members.length),
+    transferContent: buildTransferContent(fund.code, household.code),
+    bank: fundBank(fund),
+    /** true = có webhook ngân hàng → tự xác nhận khi tiền về. */
+    autoConfirm: !!env.BANK_WEBHOOK_PROVIDER,
+    payment: payment ?? undefined,
+  };
 }
 
 /** Gửi thông báo nhắc tới mọi hộ chưa đóng quỹ. */

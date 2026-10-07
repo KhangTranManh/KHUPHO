@@ -1,0 +1,104 @@
+# Chạy backend trên VPS: backend (Node) + Cloudflare Tunnel. Không mở cổng nào ra Internet:
+# cloudflared tự kết nối ra Cloudflare, Cloudflare chuyển request HTTPS → http://backend:4000 qua mạng nội bộ Docker.
+# Cấu hình: deploy/.env (xem .env.example cùng thư mục).
+#
+# Chọn MỘT kiểu tunnel bằng --profile:
+#   Tạm thời, chưa có tên miền (địa chỉ ngẫu nhiên *.trycloudflare.com, ĐỔI mỗi lần tunnel khởi động lại):
+#     docker compose --profile quick up -d --build
+#     docker compose logs cloudflared-quick | grep -o 'https://[a-z0-9-]*\.trycloudflare\.com'
+#   Chính thức, có tên miền trên Cloudflare (địa chỉ cố định api.<tên-miền>, cần CLOUDFLARE_TUNNEL_TOKEN):
+#     docker compose --profile named up -d --build
+#
+# Chống sập — chỉ container của dự án này bị ảnh hưởng, không kéo theo cả VPS / dự án khác:
+#   - Trần RAM / CPU / số tiến trình cho từng container; VPS 2 vCPU / 4 GB → luôn chừa tài nguyên cho hệ thống.
+#   - Vượt RAM → kernel kill container → restart: unless-stopped tự bật lại.
+#   - Treo (healthcheck thất bại liên tục) → autoheal khởi động lại (chỉ container có nhãn webkhupho.autoheal).
+#   - oom_score_adj > 0: VPS thiếu RAM thì kernel kill container này TRƯỚC, không kill SSH / dự án khác.
+#   - Log xoay vòng (3 × 10 MB) để không đầy ổ đĩa.
+
+# Tên project cố định → container / mạng mang tiền tố "webkhupho", tách biệt với dự án khác trên cùng VPS.
+name: webkhupho
+
+x-logging: &logging
+  driver: json-file
+  options:
+    max-size: "10m"
+    max-file: "3"
+
+services:
+  backend:
+    build: ../backend
+    image: webkhupho-backend
+    restart: unless-stopped
+    env_file: .env
+    environment:
+      NODE_ENV: production
+      PORT: 4000
+      # Heap Node < trần RAM container → Node tự dọn bộ nhớ / báo lỗi trước khi bị kill đột ngột.
+      NODE_OPTIONS: --max-old-space-size=512
+    mem_limit: 768m
+    memswap_limit: 768m   # không dùng swap → vượt trần là dừng ngay, không làm chậm cả VPS
+    cpus: 1.0             # Node xử lý chủ yếu trên 1 luồng; chừa CPU cho hệ thống + dự án khác
+    pids_limit: 256
+    oom_score_adj: 500
+    healthcheck:
+      test: ["CMD", "wget", "-qO-", "http://127.0.0.1:4000/api/health"]
+      interval: 15s
+      timeout: 5s
+      start_period: 30s
+      retries: 4          # ~1 phút không phản hồi → unhealthy → autoheal khởi động lại
+    labels:
+      webkhupho.autoheal: "true"
+    ulimits:
+      nofile: { soft: 4096, hard: 8192 }
+    logging: *logging
+    # Chỉ mở trên máy VPS (để kiểm tra bằng curl), không ra ngoài.
+    ports:
+      - "127.0.0.1:${BACKEND_HOST_PORT:-4000}:4000"   # đổi BACKEND_HOST_PORT nếu cổng 4000 đã có dự án khác dùng
+
+  # Tunnel cố định — Zero Trust → Networks → Tunnels, Public Hostname api.<tên-miền> → http://backend:4000
+  cloudflared:
+    profiles: [named]
+    image: cloudflare/cloudflared:latest
+    restart: unless-stopped
+    command: tunnel --no-autoupdate run
+    oom_score_adj: 500
+    environment:
+      # Trống → cloudflared tự báo thiếu token (không kiểm tra ở đây để profile "quick" chạy được khi chưa có token).
+      TUNNEL_TOKEN: ${CLOUDFLARE_TUNNEL_TOKEN:-}
+    mem_limit: 256m
+    cpus: 0.5
+    logging: *logging
+    depends_on:
+      backend:
+        condition: service_healthy
+
+  # Tunnel tạm (Quick Tunnel) — không cần tên miền / tài khoản, chỉ để thử nghiệm.
+  cloudflared-quick:
+    profiles: [quick]
+    image: cloudflare/cloudflared:latest
+    restart: unless-stopped
+    command: tunnel --no-autoupdate --url http://backend:4000
+    oom_score_adj: 500
+    mem_limit: 256m
+    cpus: 0.5
+    logging: *logging
+    depends_on:
+      backend:
+        condition: service_healthy
+
+  # Khởi động lại container bị "unhealthy" (Docker tự nó chỉ restart khi container CHẾT, không restart khi treo).
+  # CHỈ đụng tới container có nhãn webkhupho.autoheal=true — không ảnh hưởng dự án khác trên VPS.
+  # Cần quyền Docker socket để restart container; image chỉ làm đúng việc đó.
+  autoheal:
+    image: willfarrell/autoheal:latest
+    restart: unless-stopped
+    environment:
+      AUTOHEAL_CONTAINER_LABEL: webkhupho.autoheal
+      AUTOHEAL_INTERVAL: 10
+      AUTOHEAL_START_PERIOD: 60
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+    mem_limit: 64m
+    cpus: 0.1
+    logging: *logging

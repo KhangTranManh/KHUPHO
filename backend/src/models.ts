@@ -19,6 +19,7 @@ import './modules/notifications/notification.model.js';
 // 5. Thu quỹ
 import './modules/funds/fund.model.js';
 import './modules/funds/fundPayment.model.js';
+import './modules/funds/bankTransaction.model.js';
 // 6. Cộng đồng
 import './modules/community/survey.model.js';
 import './modules/community/surveyResponse.model.js';

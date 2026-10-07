@@ -6,8 +6,8 @@
  * Số của trưởng KP, UBND phường, hội đoàn… do trưởng KP nhập qua POST /api/directory.
  * Tài khoản nhận (bank) của từng quỹ cập nhật trong collection `funds` khi có — không đặt sẵn để tránh QR giả.
  */
-import { DirectoryModel } from '../../../src/modules/directory/directory.model.js';
-import { FundModel } from '../../../src/modules/funds/fund.model.js';
+import { DirectoryModel } from '../../../backend/src/modules/directory/directory.model.js';
+import { FundModel } from '../../../backend/src/modules/funds/fund.model.js';
 import { step } from '../lib/run.js';
 
 export const FUNDS = [

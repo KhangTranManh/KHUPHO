@@ -2,7 +2,7 @@
  * Bước 1 — cấu trúc: tạo đủ collection và đồng bộ index theo khai báo trong các model
  * (tạo index thiếu, xoá index thừa). Danh sách model: src/models.ts.
  */
-import mongoose from 'mongoose';
+import { mongoose } from '../../../backend/src/config/database.js';
 import { step } from '../lib/run.js';
 
 export async function syncSchema() {

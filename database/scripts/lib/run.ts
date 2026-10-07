@@ -2,13 +2,32 @@
  * Khung chung cho mọi script database: kết nối → chạy → luôn ngắt kết nối; lỗi → exit code 1.
  *   runScript(async () => { ... });
  */
-import mongoose, { type HydratedDocument, type Model } from 'mongoose';
-import { connectDatabase, disconnectDatabase } from '../../../src/config/database.js';
-import { env } from '../../../src/config/env.js';
-import '../../../src/models.js';
+import {
+  connectDatabase,
+  describeConnectionError,
+  disconnectDatabase,
+  mongoose,
+  type HydratedDocument,
+  type Model,
+} from '../../../backend/src/config/database.js';
+import { env } from '../../../backend/src/config/env.js';
+import '../../../backend/src/models.js';
 
 /** Cờ dòng lệnh: `npm run db:setup -- --demo` → hasFlag('demo') = true. */
 export const hasFlag = (name: string) => process.argv.includes(`--${name}`);
+
+/** Tuỳ chọn có giá trị: `--household HK-1002` → getOption('household') = 'HK-1002'. */
+export function getOption(name: string): string | undefined {
+  const i = process.argv.indexOf(`--${name}`);
+  const value = i >= 0 ? process.argv[i + 1] : undefined;
+  return value && !value.startsWith('--') ? value : undefined;
+}
+
+/** Tham số không phải cờ / giá trị của cờ, theo thứ tự. */
+export function positionalArgs(optionNames: string[] = []): string[] {
+  const args = process.argv.slice(2);
+  return args.filter((a, i) => !a.startsWith('--') && !optionNames.some((o) => args[i - 1] === `--${o}`));
+}
 
 export function runScript(main: () => Promise<void>) {
   (async () => {
@@ -18,7 +37,7 @@ export function runScript(main: () => Promise<void>) {
   })()
     .then(() => disconnectDatabase())
     .catch(async (err) => {
-      console.error(err instanceof Error ? err.message : err);
+      console.error(describeConnectionError(err));
       await disconnectDatabase().catch(() => {});
       process.exit(1);
     });

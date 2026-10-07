@@ -2,7 +2,7 @@
  * Tổng quan database: mỗi collection có bao nhiêu document, bao nhiêu index. Chỉ đọc.
  *   npm run db:status
  */
-import mongoose from 'mongoose';
+import { mongoose } from '../../backend/src/config/database.js';
 import { runScript } from './lib/run.js';
 
 runScript(async () => {

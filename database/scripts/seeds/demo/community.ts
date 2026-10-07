@@ -2,19 +2,19 @@
  * Dữ liệu mẫu — hoạt động khu phố: phản ánh & SOS (kèm lịch sử xử lý), bài đăng + lượt đọc,
  * khoản đóng quỹ + thông báo đến hộ, khảo sát + câu trả lời, lịch sinh hoạt.
  */
-import type { Types } from 'mongoose';
-import { nextSequence } from '../../../../src/common/db/counter.model.js';
-import { addDays, toISODate } from '../../../../src/common/utils/date.js';
-import { ActivityModel } from '../../../../src/modules/community/activity.model.js';
-import { SurveyModel } from '../../../../src/modules/community/survey.model.js';
-import { SurveyResponseModel } from '../../../../src/modules/community/surveyResponse.model.js';
-import { FundModel } from '../../../../src/modules/funds/fund.model.js';
-import { FundPaymentModel } from '../../../../src/modules/funds/fundPayment.model.js';
-import type { HouseholdDocument } from '../../../../src/modules/households/household.model.js';
-import { NotificationModel } from '../../../../src/modules/notifications/notification.model.js';
-import { PostModel } from '../../../../src/modules/posts/post.model.js';
-import { PostReadModel } from '../../../../src/modules/posts/postRead.model.js';
-import { ReportModel } from '../../../../src/modules/reports/report.model.js';
+import type { Types } from '../../../../backend/src/config/database.js';
+import { nextSequence } from '../../../../backend/src/common/db/counter.model.js';
+import { addDays, toISODate } from '../../../../backend/src/common/utils/date.js';
+import { ActivityModel } from '../../../../backend/src/modules/community/activity.model.js';
+import { SurveyModel } from '../../../../backend/src/modules/community/survey.model.js';
+import { SurveyResponseModel } from '../../../../backend/src/modules/community/surveyResponse.model.js';
+import { FundModel } from '../../../../backend/src/modules/funds/fund.model.js';
+import { FundPaymentModel } from '../../../../backend/src/modules/funds/fundPayment.model.js';
+import type { HouseholdDocument } from '../../../../backend/src/modules/households/household.model.js';
+import { NotificationModel } from '../../../../backend/src/modules/notifications/notification.model.js';
+import { PostModel } from '../../../../backend/src/modules/posts/post.model.js';
+import { PostReadModel } from '../../../../backend/src/modules/posts/postRead.model.js';
+import { ReportModel } from '../../../../backend/src/modules/reports/report.model.js';
 import type { Random } from '../../lib/random.js';
 import { createEach } from '../../lib/run.js';
 import { ACTIVITIES, POSTS, REPORTS, SOS_ALERTS, SURVEYS } from './data.js';
